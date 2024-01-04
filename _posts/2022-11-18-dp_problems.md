@@ -8,7 +8,7 @@ author_profile: false
 sidebar:
     nav: "docs"
 search: true
-typora-root-url: "../"
+typora-root-url: ../
 ---
 
 
@@ -31,7 +31,7 @@ windows server에서 사용할 예정이라 DDP가 불가하여 어쩔 수 없�
 
 TorchMetrics의 DP mode 사용 시 유의사항
 
-![dp_metric](/images/2022-11-18-first/dp_metric.png)
+![dp_metric](/images/2022-11-18-dp_problems/dp_metric.png)
 
 
 

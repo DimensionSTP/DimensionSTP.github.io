@@ -8,7 +8,7 @@ author_profile: false
 sidebar:
     nav: "docs"
 search: true
-typora-root-url: "../"
+typora-root-url: ../
 ---
 
 
@@ -50,10 +50,15 @@ fine-tuned single-modality model의 logit 값들을 soft voting하는 shallow fu
 ## 주요 버전
 
 코드 및 설정 파일 수정을 야기한 주요 라이브러리 버전(python==3.7.16)
+
 hydra-core==1.3.2
+
 omegaconf==2.3.0
+
 pytorch-lightning==1.9.5
+
 torch==1.13.1
+
 torchmetrics==0.11.4
 
 
@@ -76,7 +81,7 @@ accelerator 옵션의 경우, 기존에 DP, DDP 등의 multi-gpu stategy를 설�
 
 따라서 Trainer를 isntantiate 하기 위한 trainer.yaml을 아래와 같이 수정했다.
 
-![trainer_yaml](/images/2024-01-01-second/trainer_yaml.png)
+![trainer_yaml](/images/2024-01-01-refactoring_pipeline/trainer_yaml.png)
 
 
 
@@ -94,9 +99,9 @@ DP에서는 step function에서 logging을 하면 rank_zero_only=True로 0번 gp
 
 따라서 아래와 같이 step_end function을 삭제하고, step에서 log 기능을 추가했다.
 
-![step_log1](/images/2024-01-01-second/step_log1.png)
+![step_log1](/images/2024-01-01-refactoring_pipeline/step_log1.png)
 
-![step_log2](/images/2024-01-01-second/step_log2.png)
+![step_log2](/images/2024-01-01-refactoring_pipeline/step_log2.png)
 
 
 
@@ -106,7 +111,7 @@ DP에서는 step function에서 logging을 하면 rank_zero_only=True로 0번 gp
 
 버전 업데이트에 따라서 아래와 같이 on_epoch_end function을 각각 train/validation/test_epoch_end function으로 분리하여 구현했다.
 
-![epoch_end](/images/2024-01-01-second/epoch_end.png)
+![epoch_end](/images/2024-01-01-refactoring_pipeline/epoch_end.png)
 
 
 
@@ -120,7 +125,7 @@ TocrhMetrics 버전 업데이트에 따른 옵션 변화가 있었다.
 
 TorchMetric 사용 시, task 인자를 반드시 추가해야함에 따라 코드에서 아래와 같이 task 인자를 추가해줬다.
 
-![torchmetrics1](/images/2024-01-01-second/torchmetrics1.png)
+![torchmetrics1](/images/2024-01-01-refactoring_pipeline/torchmetrics1.png)
 
 
 
@@ -128,7 +133,7 @@ TorchMetric 사용 시, task 인자를 반드시 추가해야함에 따라 코�
 
 또한, task에 입력된 옵션이 metric 이름 앞에 붙으므로 callback.yaml 파일의 monitor 이름을 아래와 같이 수정했다.
 
-![torchmetrics2](/images/2024-01-01-second/torchmetrics2.png)
+![torchmetrics2](/images/2024-01-01-refactoring_pipeline/torchmetrics2.png)
 
 
 
@@ -145,25 +150,25 @@ omegaconf==2.3.0
 
 
 
-![main_yaml](/images/2024-01-01-second/main_yaml.png)
+![main_yaml](/images/2024-01-01-refactoring_pipeline/main_yaml.png)
 
 위 main 실행 yaml 파일의 defaults 옵션에서,
 
 
 
-![dataset_yaml](/images/2024-01-01-second/dataset_yaml.png)
+![dataset_yaml](/images/2024-01-01-refactoring_pipeline/dataset_yaml.png)
 
 dataset_module과
 
 
 
-![trainer_yaml2](/images/2024-01-01-second/trainer_yaml2.png)
+![trainer_yaml2](/images/2024-01-01-refactoring_pipeline/trainer_yaml2.png)
 
 trainer 옵션이 꼬였다.
 
 
 
-![architecture_yaml](/images/2024-01-01-second/architecture_yaml.png)
+![architecture_yaml](/images/2024-01-01-refactoring_pipeline/architecture_yaml.png)
 
 위 architecture_module 같은 경우는 정상적으로 옵션들이 적용됐다.
 
@@ -173,9 +178,9 @@ trainer 옵션이 꼬였다.
 
 아래와 같이 모두 정상 실행 및 logging되는 것을 확인했다.
 
-![wandb1](/images/2024-01-01-second/wandb1.png)
+![wandb1](/images/2024-01-01-refactoring_pipeline/wandb1.png)
 
-![wandb2](/images/2024-01-01-second/wandb2.png)
+![wandb2](/images/2024-01-01-refactoring_pipeline/wandb2.png)
 
 
 
