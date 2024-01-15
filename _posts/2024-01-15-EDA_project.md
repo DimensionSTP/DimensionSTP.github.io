@@ -8,6 +8,7 @@ author_profile: false
 sidebar:
     nav: "docs"
 search: true
+published: true
 typora-root-url: ../
 ---
 
