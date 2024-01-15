@@ -172,7 +172,7 @@ LightGBM, XGBoost의 기본 classifier로 모든 변수를 학습시키는 방�
 
 최종 정확도 0.96, f1 score 0.96을 달성했다.
 
-*(프로젝트 발표 슬라이드 중 모델 성능 부분 캡처)*
+*(프로젝트 발표 슬라이드 중 모델 성능 파트 캡처)*
 
 ![ppt_capture_model_performance](/images/2024-01-15-EDA_project/ppt_capture_model_performance.png)
 
@@ -186,7 +186,7 @@ EDA 결론과 상충되는 5개의 변수는 모두 binary categories였다.
 
 EDA 결과에는 없지만 feature importance 상위에 랭크된 변수들도 있었는데, 대부분 multi-categories였다.
 
-*(프로젝트 발표 슬라이드 중 변수 별 중요도 부분 캡처)*
+*(프로젝트 발표 슬라이드 중 변수 별 중요도 파트 캡처)*
 
 ![ppt_capture_feature_importance](/images/2024-01-15-EDA_project/ppt_capture_feature_importance.png)
 
