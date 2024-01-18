@@ -2,7 +2,7 @@
 layout: single
 title:  "머신러닝을 위한 EDA? EDA를 위한 머신러닝!"
 categories: Project
-tag: [EDA, Machine Learning, ML, 머신러닝, LightGBM, LGBM, XGBoost, Weight & Bias, WandB, Sweep, Optuna]
+tag: [EDA, Machine Learning, ML, 머신러닝, LightGBM, LGBM, XGBoost, Weight & Bias, WandB, Optuna, Sweep]
 toc: true
 author_profile: false
 sidebar:
