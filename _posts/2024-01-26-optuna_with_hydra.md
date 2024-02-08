@@ -65,7 +65,7 @@ pytorch-lightning==1.9.5
 
 ## 기본적인 Optuna의 사용법
 
-![basic_optuna_example](/images/2024-01-26-optuna_with_hydra/basic_optuna_example.png){: width="100%" height="100%"}
+![basic_optuna_example](/images/2024-01-26-optuna_with_hydra/basic_optuna_example.png){: .align-center}
 
 위와 같이 objective function에 search하고자 하는 params들의 범위를 설정한다.
 
@@ -73,11 +73,11 @@ pytorch-lightning==1.9.5
 
 trial은 optuna.trial.Trial로, trial.suggest_{타입}으로 아래와 같이 선택할 수 있다.
 
-![optuna_trial](/images/2024-01-26-optuna_with_hydra/optuna_trial.png){: width="100%" height="100%"}
+![optuna_trial](/images/2024-01-26-optuna_with_hydra/optuna_trial.png){: .align-center}
 
 그리고 아래와 같이 hyper-parameter search 시도 횟수(n_trials), objective 결과를 추적하는 방식(direction), Sampler와 Pruner(optional)를 설정하고 돌리면, 결과의 .best_trial에서 .params와 .value에서 최적 hparams와 거기에 따른 스코어를 볼 수 있다.
 
-![basic_optuna_call](/images/2024-01-26-optuna_with_hydra/basic_optuna_call.png){: width="100%" height="100%"}
+![basic_optuna_call](/images/2024-01-26-optuna_with_hydra/basic_optuna_call.png){: .align-center}
 
 여기서  direction은 일반적으로 rmse, logloss 등의 loss를 minimize하거나 accuracy, f1등의 score를 maximize하는 형식으로 설정하면 된다.
 
@@ -89,45 +89,45 @@ Hydra에서 hparams의 종류, 타입 등을 설정하고 그 외 direction n_tr
 
 
 
-![tune_py](/images/2024-01-26-optuna_with_hydra/tune_py.png){: width="100%" height="100%"}
+![tune_py](/images/2024-01-26-optuna_with_hydra/tune_py.png){: .align-center}
 
 tune.py를 이용하여 hyper-parameter tuning 실행
 
 
 
-![tune_yaml](/images/2024-01-26-optuna_with_hydra/tune_yaml.png){: width="100%" height="100%"}
+![tune_yaml](/images/2024-01-26-optuna_with_hydra/tune_yaml.png){: .align-center}
 
 tune.py 실행 시 ~tune.yaml을 이용하여 tuner_module load
 
 
 
-![tuner_module](/images/2024-01-26-optuna_with_hydra/tuner_module.png){: width="100%" height="100%"}
+![tuner_module](/images/2024-01-26-optuna_with_hydra/tuner_module.png){: .align-center}
 
-![tuner_module_objective1](/images/2024-01-26-optuna_with_hydra/tuner_module_objective1.png){: width="100%" height="100%"}
+![tuner_module_objective1](/images/2024-01-26-optuna_with_hydra/tuner_module_objective1.png){: .align-center}
 
-![tuner_module_objective2](/images/2024-01-26-optuna_with_hydra/tuner_module_objective2.png){: width="100%" height="100%"}
+![tuner_module_objective2](/images/2024-01-26-optuna_with_hydra/tuner_module_objective2.png){: .align-center}
 
 tuner_module 정의
 
 
 
-![tuner_module_yaml1](/images/2024-01-26-optuna_with_hydra/tuner_module_yaml1.png){: width="100%" height="100%"}
+![tuner_module_yaml1](/images/2024-01-26-optuna_with_hydra/tuner_module_yaml1.png){: .align-center}
 
-![tuner_module_yaml2](/images/2024-01-26-optuna_with_hydra/tuner_module_yaml2.png){: width="100%" height="100%"}
+![tuner_module_yaml2](/images/2024-01-26-optuna_with_hydra/tuner_module_yaml2.png){: .align-center}
 
 tuner_module/~tunermodule.yaml에서 hprams setting
 
 
 
-![pipeline_tune](/images/2024-01-26-optuna_with_hydra/pipeline_tune.png){: width="100%" height="100%"}
+![pipeline_tune](/images/2024-01-26-optuna_with_hydra/pipeline_tune.png){: .align-center}
 
 pipeline에서 tune 정의
 
 
 
-![pipeline_train](/images/2024-01-26-optuna_with_hydra/pipeline_train.png){: width="100%" height="100%"}
+![pipeline_train](/images/2024-01-26-optuna_with_hydra/pipeline_train.png){: .align-center}
 
-![archimodule_train](/images/2024-01-26-optuna_with_hydra/archimodule_train.png){: width="100%" height="100%"}
+![archimodule_train](/images/2024-01-26-optuna_with_hydra/archimodule_train.png){: .align-center}
 
 train에서 tuned params check 및 적용 기능 추가
 
@@ -149,25 +149,25 @@ DL의 경우 Pytoch-Lightning을 사용하기 때문에, optuna에서 권장하�
 
 
 
-![pl_tune_py](/images/2024-01-26-optuna_with_hydra/pl_tune_py.png){: width="100%" height="100%"}
+![pl_tune_py](/images/2024-01-26-optuna_with_hydra/pl_tune_py.png){: .align-center}
 
-![pl_tune_yaml](/images/2024-01-26-optuna_with_hydra/pl_tune_yaml.png){: width="100%" height="100%"}
+![pl_tune_yaml](/images/2024-01-26-optuna_with_hydra/pl_tune_yaml.png){: .align-center}
 
 ML과 마찬가지로 tune.py와 ~tune.yaml을 이용하여 hyper-parameter tuning을 실행한다.
 
 
 
-![pl_tuner_module1](/images/2024-01-26-optuna_with_hydra/pl_tuner_module1.png){: width="100%" height="100%"}
+![pl_tuner_module1](/images/2024-01-26-optuna_with_hydra/pl_tuner_module1.png){: .align-center}
 
-![pl_tuner_module2](/images/2024-01-26-optuna_with_hydra/pl_tuner_module2.png){: width="100%" height="100%"}
+![pl_tuner_module2](/images/2024-01-26-optuna_with_hydra/pl_tuner_module2.png){: .align-center}
 
-![pl_tuner_module3](/images/2024-01-26-optuna_with_hydra/pl_tuner_module3.png){: width="100%" height="100%"}
+![pl_tuner_module3](/images/2024-01-26-optuna_with_hydra/pl_tuner_module3.png){: .align-center}
 
-![pl_tuner_module4](/images/2024-01-26-optuna_with_hydra/pl_tuner_module4.png){: width="100%" height="100%"}
+![pl_tuner_module4](/images/2024-01-26-optuna_with_hydra/pl_tuner_module4.png){: .align-center}
 
-![pl_tuner_module_yaml1](/images/2024-01-26-optuna_with_hydra/pl_tuner_module_yaml1.png){: width="100%" height="100%"}
+![pl_tuner_module_yaml1](/images/2024-01-26-optuna_with_hydra/pl_tuner_module_yaml1.png){: .align-center}
 
-![pl_tuner_module_yaml2](/images/2024-01-26-optuna_with_hydra/pl_tuner_module_yaml2.png){: width="100%" height="100%"}
+![pl_tuner_module_yaml2](/images/2024-01-26-optuna_with_hydra/pl_tuner_module_yaml2.png){: .align-center}
 
 마찬가지로 ~tunermodule.py와 ~tunermodule.yaml을 이용하여 tuning 과정과 옵션을 정의한다.
 
@@ -175,7 +175,7 @@ ML과 마찬가지로 tune.py와 ~tune.yaml을 이용하여 hyper-parameter tuni
 
 
 
-![pl_pipeline_tune_py](/images/2024-01-26-optuna_with_hydra/pl_pipeline_tune_py.png){: width="100%" height="100%"}
+![pl_pipeline_tune_py](/images/2024-01-26-optuna_with_hydra/pl_pipeline_tune_py.png){: .align-center}
 
 마찬가지로, pipeline에서 tune 함수를 정의해준다.
 
@@ -183,11 +183,11 @@ ML 때와 마찬가지로, tunermodule에서 LightningModule과 Trainer를 인�
 
 
 
-![pl_train_py](/images/2024-01-26-optuna_with_hydra/pl_train_py.png){: width="100%" height="100%"}
+![pl_train_py](/images/2024-01-26-optuna_with_hydra/pl_train_py.png){: .align-center}
 
-![pl_test_py](/images/2024-01-26-optuna_with_hydra/pl_test_py.png){: width="100%" height="100%"}
+![pl_test_py](/images/2024-01-26-optuna_with_hydra/pl_test_py.png){: .align-center}
 
-![pl_train_test_yaml](/images/2024-01-26-optuna_with_hydra/pl_train_test_yaml.png){: width="100%" height="100%"}
+![pl_train_test_yaml](/images/2024-01-26-optuna_with_hydra/pl_train_test_yaml.png){: .align-center}
 
 ML과는 달리 pipeline이 아닌 최종 실행 train.py, test.py에서 yaml의 is_tuned option을 체크해서 True라면, best_params.json을 불러와서 기존 config와 merge한다.
 
@@ -215,7 +215,7 @@ Optuna의 Pytorch-Lightning의 예시 코드를 보면 import문이 pytorch-ligh
 
 
 
-![optuna_pl_example_import](/images/2024-01-26-optuna_with_hydra/optuna_pl_example_import.png){: width="100%" height="100%"}
+![optuna_pl_example_import](/images/2024-01-26-optuna_with_hydra/optuna_pl_example_import.png){: .align-center}
 
 위와 같이 import lightning으로 시작하는데, 이러한 import 방식은 Pytorch-Lightning 2.0부터 가능한 import 형식이다.
 
@@ -225,7 +225,7 @@ Optuna의 Pytorch-Lightning의 예시 코드를 보면 import문이 pytorch-ligh
 
 
 
-![optuna_lightning_error](/images/2024-01-26-optuna_with_hydra/optuna_lightning_error.png){: width="100%" height="100%"}
+![optuna_lightning_error](/images/2024-01-26-optuna_with_hydra/optuna_lightning_error.png){: .align-center}
 
 버전 3.5부터는 pytorch-lightning 2.0 이상을 지원하는 것을 확인했다.
 
@@ -239,13 +239,13 @@ Optuna의 Pytorch-Lightning의 예시 코드를 보면 import문이 pytorch-ligh
 
 
 
-![optuna_3_5](/images/2024-01-26-optuna_with_hydra/optuna_3_5.png){: width="100%" height="100%"}
+![optuna_3_5](/images/2024-01-26-optuna_with_hydra/optuna_3_5.png){: .align-center}
 
 다만, 이전 버전의 pytorch-lightning integration을 지원해주지 않는 부분은 아쉽다. 
 
 해당 이슈는 #5028에서 확인 가능하고, commit log를 통해서도 더이상 1.x pytorch-lightning은 지원하지 않는 것을 확인했다.
 
-![optuna_3_5_commit_log](/images/2024-01-26-optuna_with_hydra/optuna_3_5_commit_log.png){: width="100%" height="100%"}
+![optuna_3_5_commit_log](/images/2024-01-26-optuna_with_hydra/optuna_3_5_commit_log.png){: .align-center}
 
 
 
@@ -255,7 +255,7 @@ Optuna의 Pytorch-Lightning의 예시 코드를 보면 import문이 pytorch-ligh
 
 Optuna 3.3와 3.4에서는 다음과 같은 에러가 발생했다.
 
-![optuna_ddp_error](/images/2024-01-26-optuna_with_hydra/optuna_ddp_error.png){: width="100%" height="100%"}
+![optuna_ddp_error](/images/2024-01-26-optuna_with_hydra/optuna_ddp_error.png){: .align-center}
 
 
 
@@ -263,7 +263,7 @@ Optuna 3.3와 3.4에서는 다음과 같은 에러가 발생했다.
 
 
 
-![optuna_ddp_issue](/images/2024-01-26-optuna_with_hydra/optuna_ddp_issue.png){: width="100%" height="100%"}
+![optuna_ddp_issue](/images/2024-01-26-optuna_with_hydra/optuna_ddp_issue.png){: .align-center}
 
 
 
@@ -275,9 +275,9 @@ Optuna 3.3와 3.4에서는 다음과 같은 에러가 발생했다.
 
 
 
-![optuna_pl_version_error](/images/2024-01-26-optuna_with_hydra/optuna_pl_version_error.png){: width="100%" height="100%"}
+![optuna_pl_version_error](/images/2024-01-26-optuna_with_hydra/optuna_pl_version_error.png){: .align-center}
 
-![optuna_pl_version_error2](/images/2024-01-26-optuna_with_hydra/optuna_pl_version_error2.png){: width="100%" height="100%"}
+![optuna_pl_version_error2](/images/2024-01-26-optuna_with_hydra/optuna_pl_version_error2.png){: .align-center}
 
 위 링크도 그렇고, 확인해보니 Pytorch-Ligtning version 1.8 이상에서 삭제된 기능 때문에 integration에서 에러가 발생한다.
 

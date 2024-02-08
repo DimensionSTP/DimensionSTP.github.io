@@ -35,7 +35,7 @@ __구체적인 챗봇의 기획은 "일러스트를 도와주는 음성 챗봇"�
 + 최근 전참시에서 자이언티가 ChatGPT 앱을 이용해 음성으로 가사를 작사하는 등의 사용 예시를 보게 됨
 + ChatGPT의 STT, TTS 모듈인 whispher가 한국어 정확도가 높아서 ChatGPT API만으로 별다른 전처리 없이 간단한 챗봇 구현을 할 수 있겠다는 각을 봄
 
-![chatgpt_voice_example](/images/2024-01-04-voice_chatbot/chatgpt_voice_example.webp)
+![chatgpt_voice_example](/images/2024-01-04-voice_chatbot/chatgpt_voice_example.webp){: .align-center}
 
  
 
@@ -69,7 +69,7 @@ python-dotenv
 
 챗봇은 최대한 일러스트 ideation을 도와줄 수 있도록 영어로 content 프롬프트를 작성했다.
 
-![chatbot_example](/images/2024-01-04-voice_chatbot/chatbot_example.gif)
+![chatbot_example](/images/2024-01-04-voice_chatbot/chatbot_example.gif){: .align-center}
 
 
 
