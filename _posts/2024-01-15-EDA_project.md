@@ -161,7 +161,7 @@ LightGBM, XGBoost의 기본 classifier로 모든 변수를 학습시키는 방�
 
 *(실험 logging 중 일부, 10 fold 학습 진행의 흔적)*
 
-![wandb_logging_example](/images/2024-01-15-EDA_project/wandb_logging_example.png)
+![wandb_logging_example](/images/2024-01-15-EDA_project/wandb_logging_example.png){: .align-center}
 
 
 
@@ -175,7 +175,7 @@ LightGBM, XGBoost의 기본 classifier로 모든 변수를 학습시키는 방�
 
 *(프로젝트 발표 슬라이드 중 모델 성능 파트 캡처)*
 
-![ppt_capture_model_performance](/images/2024-01-15-EDA_project/ppt_capture_model_performance.png)
+![ppt_capture_model_performance](/images/2024-01-15-EDA_project/ppt_capture_model_performance.png){: .align-center}
 
 
 
@@ -189,7 +189,7 @@ EDA 결과에는 없지만 feature importance 상위에 랭크된 변수들도 �
 
 *(프로젝트 발표 슬라이드 중 변수 별 중요도 파트 캡처)*
 
-![ppt_capture_feature_importance](/images/2024-01-15-EDA_project/ppt_capture_feature_importance.png)
+![ppt_capture_feature_importance](/images/2024-01-15-EDA_project/ppt_capture_feature_importance.png){: .align-center}
 
 위의 결과를 바탕으로 아래와 같은 결론을 내렸다.
 
