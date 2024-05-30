@@ -30,7 +30,7 @@ typora-root-url: ../
 __목표__
 
 + DeepSpeed strategy의 성능을 최대한 끌어낼 수 있는 optimization
-+ DeepSpeed stratgy와 기존 파이프라인의 완벽한 호환
++ DeepSpeed strategy와 기존 파이프라인의 완벽한 호환
 + Optuna를 이용한 hyper-parameters tuning에서 multi-GPU 사용
 + Training resumption
 + 더 나은 WandB projects 관리(실험이 너무 많이 쌓이니 찾아보기 힘듦)
