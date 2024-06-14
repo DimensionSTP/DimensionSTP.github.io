@@ -91,7 +91,7 @@ __대회에서의 개인 목표__
 
 
 
-Layout LM의 경우  Huggingface Hub에서 한글 기반 사전 학습 모델이 없고, Tesseract OCR만을 사용할 수 있다는 점, Tesseract OCR에서 한글로 추출해도 tokenizer가 영어 기반이라는 문제, 한글 tokenizer로 교체한다 할지라도 embedding이 제대로 될 수 없다는 문제들로 인해 성과가 좋지 않았다.
+Layout LM의 경우  HuggingFace Hub에서 한글 기반 사전 학습 모델이 없고, Tesseract OCR만을 사용할 수 있다는 점, Tesseract OCR에서 한글로 추출해도 tokenizer가 영어 기반이라는 문제, 한글 tokenizer로 교체한다 할지라도 embedding이 제대로 될 수 없다는 문제들로 인해 성과가 좋지 않았다.
 
 
 
@@ -99,7 +99,7 @@ Layout LM의 경우  Huggingface Hub에서 한글 기반 사전 학습 모델이
 
 
 
-## Data Augmentation method
+## Data Augmentation Method
 
 Data Augmentation의 경우 image와 text, 2가지 측면에서 이루어졌다.
 
@@ -136,6 +136,8 @@ Data Augmentation의 경우 image와 text, 2가지 측면에서 이루어졌다.
 + Sentence Structure Modification
 + Random Deletion
 + TF-IDF를 이용한 반복 키워드 추출, 용어 통일
+
+
 
 Back Translation 정도만 의미 있었고, 나머지 증강 기법들은 성능이 거의 동일했다(데이터 절대 수 부족).
 
@@ -180,8 +182,6 @@ TF-IDF를 이용해 용어를 통일 시키는 것을 Predict dataset에 적용�
 
 
 
-
-
 ## 결과
 
 총 8조 중 6등으로 마무리했다.
@@ -190,11 +190,17 @@ TF-IDF를 이용해 용어를 통일 시키는 것을 Predict dataset에 적용�
 
 
 
+
+
 # 후기
 
-대회 wrap-up 시간에 상위 1, 2등 팀의 발표를 보니 모델링은 아예 신경쓰지도 못하고 timm에 올라온 기본 모델, 고정 hyper-parameters만 사용했고, 대부분 데이터를 manually 수작업으로 수정하는데 대부분의 시간을 보냈더라.
+대회 그룹 회고 시간에 상위 1, 2등 팀의 발표를 보니 모델링은 아예 신경쓰지도 못하고 timm에 올라온 기본 모델, 고정 hyper-parameters만 사용했고, 대부분 데이터를 manually 수작업으로 수정하는데 대부분의 시간을 보냈더라.
 
-이후 대회 기획자의 발표를 들어보니 이래저래 좋은 말로 포장해놨지만, 결국 외주를 줘서 데이터를 받아왔는데 데이터의 전체 수가 적어서 강제로 augmentation을 했고, 이 과정에서 다른 외주가 들어가서 좀 비현실적인 augmentation 방법들이 진행되었으며, 데이터 label 종류도 적어서 병원 문서 쪽의 label을 세분화하다보니 miss-label도 생기고, 사람이 봐도 이게 무슨 label에 해당하는지 헷갈리는 것도 생긴 것 같다.
+
+
+이후 wrap-up 시간 때 대회 기획자의 발표를 들어보니 이래저래 좋은 말로 포장해놨지만, 결국 외주를 줘서 데이터를 받아왔는데 데이터의 전체 수가 적어서 강제로 augmentation을 했고, 이 과정에서 다른 외주가 들어가서 좀 비현실적인 augmentation 방법들이 진행되었으며, 데이터 label 종류도 적어서 병원 문서 쪽의 label을 세분화하다보니 miss-label도 생기고, 사람이 봐도 이게 무슨 label에 해당하는지 헷갈리는 것도 생긴 것 같다.
+
+
 
 유명한 kaggler들이 모인 업스테이지가 구성한 대회가 이정도 수준이라는 것에 솔직히 많이 실망했다.
 
