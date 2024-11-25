@@ -17,15 +17,15 @@ typora-root-url: ../
 
 #  Transformer architecture and Depthwise separable convolution
 
-필요 및 공부 겸 META의 ConvNext 공식 구현 코드를 살펴보다가 갑자기 번뜩였다.
+필요 및 공부 겸 META의 ConvNext 공식 구현 코드를 살펴보다가 생긴 인사이트.
 
-아! Transformer의 attention - feed forward는 Depthwise seperable convolution의 depthwise convolution - 1x1 pointwise convolution이랑 근원적으로 같구나!
+Transformer의 attention - feed forward는 Depthwise seperable convolution의 depthwise convolution - 1x1 pointwise convolution이랑 근원적으로 같다.
 
-Attention의 원리에 가려진 feed forward 또한 embed dimension의 확장과 축소를 통해 정보의 복잡한 변환을 학습하도록 설계된 중요한 부분이구나!
+Attention의 원리에 가려진 feed forward 또한 embed dimension의 확장과 축소를 통해 정보의 복잡한 변환을 학습하도록 설계된 중요한 부분이다.
 
 
 
-# 유레카까지 생각의 발전
+# 생각의 발전
 
 ConvNext와 Attention is all you need 논문을 읽지 않은 것도 아니고, 직접 구현도 해보고 꾸준히 써왔는데 공식 코드 구현의 한 주석 때문에 번뜩였다.
 
@@ -36,6 +36,8 @@ ConvNext와 Attention is all you need 논문을 읽지 않은 것도 아니고, 
 ## 1x1 point wise convolution = linear
 
 1x1 point wise convolution은 생각해보면 linear와 같다.
+
+
 
 1x1 convolution filter를 1 in channel의 feature 전체에 걸쳐 연산을 수행한다.
 
@@ -51,7 +53,7 @@ ConvNext와 Attention is all you need 논문을 읽지 않은 것도 아니고, 
 
 
 
-1x1 point wise convolution은 단순히 연산 효율성 뿐만 아니라 ConvNext block처럼 feature dimension을 늘렸다 줄이는식으로 두번 반복하면 channel의 확장과 축소를 통해 정보의 복잡한 변환을 학습하는 중요한 역할을 하며, 이것을 feed forwar에서도 마찬가지다.
+1x1 point wise convolution은 단순히 연산 효율성 뿐만 아니라 ConvNext block처럼 feature dimension을 늘렸다 줄이는식으로 두번 반복하면 channel의 확장과 축소를 통해 정보의 복잡한 변환을 학습하는 중요한 역할을 하며, 이것을 feed forward에서도 마찬가지다.
 
 
 
@@ -85,9 +87,11 @@ Depth wise convolution은 groups를 in_channels만큼 최대로 나눠서 연산
 
 기존과 달리 1개의 filter가 1개의 in_channels만 담당하는 모습이 마치 head같다.
 
+out_channels는 in_channels(Q)와 filter(K^T)의 연산 결과인 attention weight이라고 할 수 있다.
 
 
-## 유레카
+
+## Insights
 
 이렇게 보니 ConvNext block은 이렇게 해석할 수 있을 것 같다.
 
