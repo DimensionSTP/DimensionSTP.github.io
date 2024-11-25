@@ -53,7 +53,7 @@ ConvNext와 Attention is all you need 논문을 읽지 않은 것도 아니고, 
 
 
 
-1x1 point wise convolution은 단순히 연산 효율성 뿐만 아니라 ConvNext block처럼 feature dimension을 늘렸다 줄이는식으로 두번 반복하면 channel의 확장과 축소를 통해 정보의 복잡한 변환을 학습하는 중요한 역할을 하며, 이것을 feed forward에서도 마찬가지다.
+1x1 point wise convolution은 단순히 연산 효율성 뿐만 아니라 ConvNext block처럼 feature dimension을 늘렸다 줄이는식으로 두번 반복하면 channel의 확장과 축소를 통해 정보의 복잡한 변환을 학습하는 중요한 역할을 하며, feed forward에서도 마찬가지다.
 
 
 
