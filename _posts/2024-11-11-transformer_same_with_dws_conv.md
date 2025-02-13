@@ -1,8 +1,8 @@
 ---
 layout: single
 title:  "Transformer architecture and Depthwise separable convolution"
-categories: Competition
-tag: [UpStage, FastCampus, Competition, NLP, Text-Summarization, HuggingFace, PyTorch, PyTorch-Lightning, Hydra-core, WandB, Optuna]
+categories: Study-concept
+tag: [Transformer, ConvNext, Convolution, Grouped convolution, Depthwise seperable convolution, Feed Forward, Architecture]
 toc: true
 author_profile: false
 sidebar:
