@@ -17,238 +17,192 @@ typora-root-url: ../
 
 #  MiniMax Lightning Attention Review
 
-👉🏻[논문 링크](https://arxiv.org/pdf/2501.12948)
+최근 AI 모델 스케일링과 long context 처리에 대한 관심이 높아짐에 따라, MiniMax-01을 주목해볼 필요가 있다. 본 리뷰에서는 MiniMax-01 전체 모델의 개요를 소개하되, 특히 **Lightning Attention** 기술에 집중한다. 특히 세부 구조, 효율성, 그리고 기존의 Softmax 및 Linear Attention과의 차별점을 자세히 살펴본다.
 
-👉🏻[비주얼 가이드](https://newsletter.languagemodels.co/p/the-illustrated-deepseek-r1)
 
-👉🏻[비주얼 가이드 번역본](https://tulip-phalange-a1e.notion.site/DeepSeek-R1-189c32470be2801c94b6e5648735447d)
 
-DeepSeek‑R1은 DeepSeek-V3-Base를 기반으로 하는 Reasoning 모델이다. 기존 DeepSeek‑V3의 학습 파이프라인과는 달리, R1은 SFT 단계 이전에 “R1‑Zero”라는 순수 RL 기반 Reasoning 모델을 먼저 구축하고, 이후 소량의 Cold Start Data를 활용해 Interim Reasoning Model을 생성, 이후 대규모 RL을 거쳐 RL checkpoint를 만들고 RL checkpoint를 SFT rejection sampling에 활용 및 SFT 적용, 그리고 일반 RL 과정을 거쳐 최종 모델로 완성된다. 이번 리뷰에서는 DeepSeek‑R1의 핵심 아이디어와 전체 흐름, 그리고 전통적인 학습 파이프라인과의 차별점을 중심으로 살펴본다.
+# Model and Data Overview
 
+모델에 대해서는 LLM과 VLM을 모두 간략히 정리하되, 이후 LLM 위주로 살펴본다.
 
 
-# Training Pipeline
 
-DeepSeek‑R1의 학습 파이프라인은 전통적인 LLM 학습 흐름(pre‑train → SFT → RL → Reasoning 모델)과 비교할 때 다음과 같은 차별점을 보인다.
+## Model Overview
 
-- **Traditional Train Pipeline (예: GPT‑o1)**
-  - 일반적으로 Pre‑training으로 거대한 웹 데이터(> 10T tokens)를 활용한 후, Supervised Fine‑Tuning(SFT) 및 Preference Tuning(RL)을 진행하여 모델을 정제한 모델을 필요에 따라 다시 reasoning 모델로 발전시킨다.
+MiniMax-01 시리즈는 두 가지 모델로 구성된다.
 
+- **MiniMax-Text-01 (LLM)**
+  - **총 파라미터:** 456B
+  - **MoE 전문가:** 32개
+  - **토큰당 활성화 파라미터:** 45.9B
+  - **학습 컨텍스트 창:** 최대 1M tokens
+  - **추론 컨텍스트 창:** 최대 4M tokens
+- **MiniMax-VL-01 (VLM)**
+  - **학습 데이터:** 512B vision-language tokens
+  - text model backbone에 추가 모듈을 도입하여 멀티모달 입력 처리
 
 
-📌 *Traditional Pipeline*
 
-![traditional-pipeline](/images/2025-02-25-DeepSeek-R1/traditional-pipeline.jpg){: .align-center}
+## Data Overview
 
+- **LLM(MiniMax-Text-01):**
 
+  - **주요 데이터셋:** CommonCrawl, Wikipedia, BookCorpus, 뉴스 데이터 등
 
-- **DeepSeek‑R1의 Train Pipeline**
-  - DeepSeek‑R1은 Pre‑training 단계 후, Base 모델을 기준으로 R1-Zero를 이용해 생성한 Cold Start Data로  **Interim Reasoning Model**을 먼저 구축한다.
-  - 이후, 대규모 reasoning RL을 적용하여 RL checkpoint를 만든다.
-  - RL checkpoint를 기반으로 거대한 Reasoning SFT 데이터를 생성하고, SFT를 적용한다.
-  - SFT checkpoint로부터 다시 일반 RL을 진행하여 최종 R1 모델을 구축한다.
+  - 토큰 규모:
 
+     약 300B 이상의 토큰
 
+    - 여러 소스의 대규모 코퍼스를 통합하여 사용
 
-📌 *R1 Pipeline*
+- **VLM(MiniMax-VL-01):**
 
-![r1-pipeline](/images/2025-02-25-DeepSeek-R1/r1-pipeline.png){: .align-center}
+  - **주요 데이터셋:** COCO, Visual Genome, 그리고 자체 구축 image-text pair data
+  - **토큰 규모:** 총 512B vision-language tokens
 
 
 
 
-## Traditional Pipeline
+# Hyper-Parameters
 
-전통적인 학습 파이프라인은 방대한 Pre‑training을 통해 기본 언어모델을 구축한 후, SFT를 통해 instruction 및 일반 태스크에 특화된 학습을 진행하며, 이후 Preference Tuning(RL)을 거쳐 모델이 사용자의 선호도에 맞게 정렬되도록 한다.
+MiniMax-01의 학습은 일반적인 LLM 학습 과정과 같이 **Pre-training**과 **Post-training (SFT, RL)** 단계로 구분된다.
 
 
 
-### SFT(Supervised Fine-Tuning)
+## Pre-training
 
-- **소개**:
-  - SFT는 prompt와 정답(completion) 쌍을 모델에 학습시켜, 모델이 주어진 instruction을 정확히 따르고 질문에 적절히 응답하도록 만드는 단계이다.
-  
-- **정의**:
-  - 일반적인 SFT에서는 수십만~수백만 건의 레이블 데이터를 활용하여, 모델이 다양한 태스크에 대해 빠르게 적응할 수 있도록 한다.
+- **Data Construction:**
 
+  - 텍스트 모델은 위에서 언급한 대규모 웹 크롤링, 백과사전, 서적, 뉴스 데이터 등에서 약 300B tokens를 사용한다.
+  - 컨텍스트 창은 최대 1M tokens까지 확장하여 모델이 장문 내 장기 의존성을 학습할 수 있도록 구성한다.
 
+- **Hyper-Parameters:**
 
+  - Optimizer:
 
-### RL(Reinforcement Learning)
+     AdamW
 
-- **하는 이유**:
-  - 단순 SFT만으로는 모델이 추론 과정에서 인간 선호도 등을 반영한 친화적인 답변을 내놓기는 힘들다.
-  
-- **Methods**:
-  - RL의 methods로는 RLHF, DPO, GRPO 등 그 방법과 장단점이 다양하나, 이번에 자세히 다루지는 않는다.
+    - $β1=0.9\beta_1 = 0.9β1=0.9, β2=0.98\beta_2 = 0.98β2=0.98$
+    - Weight Decay = 0.01
 
+  - Scheduler:
 
+    - Initial Learning Rate: $1×10−41 \times 10^{-4}1×10−4$
+    - 초기 10k steps 동안 linear warmup 진행
+    - 이후 cosine decay으로 총 500k steps에 걸쳐 학습
 
+  - Batch size:
 
-### CoT(Chain of Thought)
+    - 개별 GPU 당 2048 sequence
+    - 분산 학습 환경에서는 1024대의 GPU를 활용
 
-- **소개**:
-  - SFT, RL 2가지 방법으로 모두 가능하며, Reasoning model은 답변 과정에서 추론 단계 토큰을 생성, 스스로 생각하는 과정을 거친후 최종 답변을 한다.
-  
-- **하는 이유**:
-  - 수학, 코딩, 논리 문제 등 복잡한 태스크에서 단순 정답 외에도 문제를 푸는 과정을 설명함으로써, 모델이 명확한 인과관계를 통해 답하도록 한다.
+- **학습 전략:**
 
-- **형식**:
-  - 특정 태그들을 이용하여 중간 추론 단계를 만든 후 해당 단계의 생성 토큰들을 다시 참고하여 답변한다.
+  - 최적화된 병렬 전략과 통신–연산 오버랩 기법을 통해 MoE와 Lightning Attention 모듈 모두에서 높은 효율성을 확보
 
 
 
-## R1 Pipeline
+## Post-training
 
-+ DeepSeek‑R1의 파이프라인은 기존의 전통적인 방식과 달리, Base 모델에서 시작하여 바로 순수 강화학습(RL) 기반의 R1-Zero를 구축한다.
+- **목적:** 다운스트림 작업(예: 요약, 번역 등)에 최적화
 
-+ 이를 활용해 고품질 Reasoning 데이터(Cold Start Data)를 생성, 해당 데이터를 기반으로 RL을 진행하여 RL 초기의 cold start 단계에서 불안정성을 완화한 Interim Reasoning Model을 구축한다.
 
-+ 이후, Interim Reasoning Model을 R1-Zero처럼 대량의 reasoning data로 RL을 진행하며, 이 단계에서는 cold-start 때에는 없었던  language consistency reward를 추가하여, 보다 읽기 좋고 일관된 CoT를 생성하도록 유도한다.
-+ RL 학습이 수렴한 후, checkpoint로부터 rejection sampling을 통해 reasoning 뿐만 아니라 아니라 writing, factual QA 등 일반 영역의 데이터도 포함된 약 80만개의 SFT 데이터를 수집한다.
-+ 수집된 데이터로 SFT를 진행한 후, general RL을 거쳐서 최종 R1 모델을 완성하는 방식이다.
 
+### SFT
 
+- **Data Construction:**
+  - 고품질 인간 작성 데이터셋을 활용해 모델의 응답 품질 개선
+  - 다만, 구체적인 데이터 소스와 토큰 수, 구성에 관한 세부 정보는 논문에 명시되어 있지 않음
+- **Hyper-Parameters:**
+  - SFT 전용 LR, Batch size 등은 논문에 구체적으로 제시되지 않았으나, Pre-training과 유사한 AdamW 기반의 설정을 변형해 사용한 것으로 추정
 
-### R1-Zero
 
-- **소개**:
-  - R1-Zero는 R1 pipeline 이전의 실험적 모델로, SFT 없이 Base 모델에서 직접 RL을 적용해 Reasoning 능력을 극대화한 모델이다.
-  
-- **만든 이유**:
-  
-  - Base 모델 이후 대량의 SFT 데이터 없이 reasoning 능력을 끌어올릴 수 있는 지 실험하려고.
-  
-- **활용**:
 
-  - RL 초기의 불안정한 cold start 단계를 피하기 위해, R1-Zero로 부터 few shot prompting으로 생성한 긴 CoT 예시가 담긴 소량(수천 개)의 데이터로 GRPO를 적용한 Base model을 RL actor로 활용하기 위함이다.
+### RL
 
-  - 다양한 평가 기준(예: 정답의 형식, 규칙 기반 검증을 통한 정확도 평가 등)을 통해 모델이 자체적으로 보상 신호를 얻으며 학습할 수 있기 때문에, 해당 기준에 부합하는 cold start data를 생성하여 대규모 RL 전에 미리 학습해둔다면, 이후 다른 reward들을 포함한 대규모 RL에서 cold start의 불안정함을 완화할 수 있다.
+- **Reward Model:**
+  - 사용자 피드백 또는 사전 정의된 평가 지표를 기반으로 reward model을 적용
+  - 구체적인 reward model의 구조, 사용 데이터, 강화 기법 등에 대한 세부 정보는 논문에 제공되지 않음
+- **Hyper-Parameters:**
+  - 구체적으로 명시되어 있지 않음
 
-- **약점**:
 
-  - Reasoning 태스크에서는 뛰어난 성능을 보이나, 출력 형식이 불안정(예: 가독성 저하, 언어 혼합 현상)하여 사용자 친화적이지 못한 문제가 있다.
 
-- **강점**:
-  - Base 모델에 소량의 고품질 Reasoning 데이터만 추가하더라도, 모델의 Reasoning 능력이 급격히 향상되는 잠재력을 보여준다.
+# Lightning Attention
 
+MiniMax-01의 핵심 혁신은 **Lightning Attention**에 있다. 이 섹션에서는 기존의 Softmax Attention과 Linear Attention의 한계를 극복하기 위한 Lightning Attention의 구체적인 구조와 효율성을 자세히 분석한다.
 
 
 
-📌 *R1‑Zero*
-![r1-zero](/images/2025-02-25-DeepSeek-R1/r1-zero.png){: .align-center}
+## Softmax Attention
 
+- **수식:** $Attention(Q,K,V)=softmax(QK⊤d)V\text{Attention}(Q, K, V) = \text{softmax}\Bigl(\frac{QK^\top}{\sqrt{d}}\Bigr)VAttention(Q,K,V)=softmax(dQK⊤)V$
+- 계산 복잡도:
+  - $O(n2⋅d)O(n^2 \cdot d)O(n2⋅d)$
+    - $nnn$: sequence length, $ddd$: feature dimension
+  - Long Context 처리 시 메모리와 연산 비용이 급격히 증가
 
 
-### Cold Start Data
 
-- **정의**:
-  - Interim Reasoning Model을 만들기 위해, R1-Zero로 부터 few-shot prompting을 통해 수천 개 규모의 reasoning 문제 예시를 생성한다. 이를 *cold start data*라고 부른다.
-  
+## Linear Attention
 
+- **핵심 아이디어:**
+  - “Right product kernel trick”을 활용하여 Attention 연산의 quadratic 복잡도를 선형 복잡도로 변환
+- **수식 변환:**
+  - 기존 NormAttention: $O=Norm((QK⊤)V)O = \text{Norm}((QK^\top)V)O=Norm((QK⊤)V)$
+  - 오른쪽 행렬 곱셈을 이용한 변형: $O=Norm(Q(K⊤V))O = \text{Norm}(Q(K^\top V))O=Norm(Q(K⊤V))$
+- **복잡도:**
+  - $O(nd2)O(nd^2)O(nd2)$
+  - **장점:** Recurrent prediction에 적합하며, $K⊤VK^\top VK⊤V$를 미리 계산하여 반복 계산을 줄임
+  - **단점:** Causal language modeling에서는 오른쪽 곱셈의 효율성이 떨어지고, cumsum 연산이 필요하여 병렬화에 한계가 있음
 
 
-📌 *Cold Start Data*
 
-![cold-start](/images/2025-02-25-DeepSeek-R1/cold-start.png){: .align-center}
+## Lightning Attention
 
+**Lightning Attention**은 기존 linear attention의 병목인 느린 cumsum 연산을 해결하기 위해 제안된 I/O-aware 최적화 기법이다.
 
+- **핵심 개선점:**
+  - Tiling 기법 도입:
+    - Q, K, V 행렬을 $B×dB \times dB×d$ 크기의 블록으로 분할하여 계산
+  - Intra-block & Inter-block 분할:
+    - Intra-block 계산:
+      - 상대적으로 작은 블록 내에서는 **left product attention**을 사용하여 빠른 계산을 수행
+      - 수식 예시: $Ointra=[(QK⊤)⊙M]VO_{\text{intra}} = \Bigl[(QK^\top) \odot M\Bigr]VOintra=[(QK⊤)⊙M]V 여기서 Mts=1M_{ts}=1Mts=1 if t≥st \ge st≥s$
+    - Inter-block 계산:
+      - 블록 간 누적된 값을 활용하는 **right product attention**을 사용
+      - 재귀적 업데이트: $kv0=0,kvt=kvt−1+ktvt⊤$,$ot⊤=qt⊤kvtkv_0 = 0$,$\quad kv_t = kv_{t-1} + k_t v_t^\top$,$\quad o_t^\top = q_t^\top kv_tkv0=0$,$kvt=kvt−1+ktvt⊤$,$ot⊤=qt⊤kvt$
+- **Tiling을 통한 최종 연산 복잡도:**
+  - 최종 시간 복잡도는 $O(nd2+nBd)O(nd^2 + nBd)O(nd2+nBd)$로, $BBB$는 블록 사이즈
+  - 실제 실험에서는 $n=106n = 10^6n=106$, $d=1024d = 1024d=1024$ 조건에서 전통적 softmax attention 대비 연산량이 약 1000배 절감 효과를 보임
+- **Hybrid 구조 내 Lightning Attention 적용:**
+  - 전체 48 레이어의 Transformer 중 **초기 20 레이어**에 Lightning Attention을 적용하여, 글로벌(long-range) 정보를 효율적으로 집약
+  - 나머지 28 레이어는 전통적 softmax attention을 사용해 지역적 세부 표현을 보완
+  - Ablation study 결과, 이러한 Hybrid 구조가 모델 성능과 연산 효율성 측면에서 최적의 균형을 이루는 것으로 나타남
 
-### R1 Flow
 
-- **학습 상세**:
-  + **SFT** 
-    + Reasoning(Long CoT) 데이터는 Interim Reasoning Model의 rejection sampling을 통해 약 60만 건으로 정제된다.
-      SFT 데이터는 약 20만 건 정도로, 다양한 도메인(코딩, 수학, 일반 QA 등)에서 수집되며, DeepSeek‑V2.5 기반 생성 후 인력 검증을 거친다.
-    + 위 데이터를 기반으로, 수집된 Reasoning 및 Non‑Reasoning 데이터를 활용해 2 epochs 동안 fine-tune한다.
-  + **RL**
-    + PPO 및 GRPO 기법을 활용하여, 모델이 각 태스크(수학, 코딩, 논리 문제 등)에 대해 높은 정확도와 일관성을 갖도록 추가 RL을 진행한다.
-  
-- **R1 Pipeline**:
-  - Pre-train(Empty model -> Base model)
-  - Cold Start Data 구축
-    - 안정적인 RL 시작을 위해, 읽기 쉽고 긴 CoT 형식의 high-quality 데이터를 수집
-    - **R1-Zero**의 few-shot prompting 출력 재가공, human annotator의 후처리를 통해 생성
-  - Cold start data RL(Base model -> Interim Reasoning Model)
-  -  Language consistency 등의 reward들을 추가한 대규모 RL(Interim Reasoning Model ->  Reasoning Checkpoint)
-  - SFT Data 구축
-    - 일반 instruction data 20만건
-    - Reasoning Checkpoint를 통해 rejection sampling한 long CoT data 60만건
-  - SFT(Reasoning Checkpoint -> SFT Checkpoint)
-  - General RL(SFT Checkpoint -> R1)
-  
-- **차별점**:
 
-  - **Reinforcement Learning 기반 자율 학습:**
+**요약:**
 
-    - R1-Zero, R1에서는 초기 supervised fine-tuning 없이 base 모델에서 pure RL을 적용하여 모델이 스스로 reasoning 능력을 발전시키도록 하여, 모델이 스스로 문제 해결 전략을 찾고 *aha moment*와 같은 자발적 개선 단계를 가진다.
+- *Softmax Attention:** $O(n2⋅d)O(n^2 \cdot d)O(n2⋅d)$ → 긴 시퀀스에 부적합
+- **Linear Attention:** $O(nd2)O(nd^2)O(nd2)$ → cumsum 연산 병목 존재
+- **Lightning Attention:** $O(nd2+nBd)O(nd^2 + nBd)O(nd2+nBd)$ → tiling 기법과 intra-/inter-block 분할을 통해 cumsum 병목 제거, 효율적 병렬 처리 및 I/O 최적화 달성
 
-    **Cold Start Data를 통한 안정적 시작:**
 
-    - R1은 RL 초기 단계에서의 불안정함을 방지하기 위해, 소량이며 고품질인 긴 CoT 데이터를 cold start data로 수집 및 활용한다. 이 데이터는 읽기 쉽고 일관된 reasoning 과정을 제공하여, 초기 모델을 안정화시키고 RL의 효율성을 높인다.
 
-    **후속 SFT 및 데이터 혼합:**
+# Contributions
 
-    - RL이 어느 정도 수렴한 후, rejection sampling을 통해 추가 데이터를 수집하고, reasoning 외의 다양한 태스크(글쓰기, QA 등) 데이터와 혼합하여 supervised fine-tuning을 진행한다. 이를 통해 모델의 범용성과 출력의 가독성을 함께 개선한다.
-
-- **장점**:
-
-  - **자율적 발전 및 적응성:**
-    - RL을 통해 모델이 스스로 reasoning 전략을 탐색하고 개선함으로써, 명시적으로 정해진 답안 패턴에 의존하지 않고 유연하게 문제에 대응할 수 있다.
-  - **향상된 출력 가독성:**
-    - Cold start data를 활용해 읽기 좋고 일관된 CoT를 유도함으로써, 답안 뿐만 아니라 전체 reasoning 과정이 명확하게 표현된다.
-  - **성능 및 일반화 개선:**
-    - 초기 pure RL과 후속 SFT 단계를 결합하여, 기존의 SFT-only 방식보다 빠르게 성능이 향상되고, 다양한 태스크에서 강력한 reasoning 능력을 보인다.
-  - **효율적 데이터 활용:**
-    - 소량의 고품질 데이터를 기반으로 시작, 이후에 대규모 데이터를 추가하는 방식은 데이터 수집 비용과 시간을 절감하며, 모델의 성능 또한 극대화한다.
-
-
-
-
-# Distillation
-
-+ **Models**:
-  + DeepSeek‑R1의 강력한 Reasoning 능력은 소형 모델에도 효과적으로 전이시킬 수 있다. 이를 위해 DeepSeek‑R1이 생성한 고품질 reasoning data를 활용하여, Qwen 및 Llama 기반의 소형 모델(1.5B, 7B, 8B, 14B, 32B, 70B)로 증류한다.
-  
-+ **Method**:
-  + R1에서 생성한 고품질 Reasoning 데이터 샘플로 상대적 소형 dense model에 SFT한다. 이 방식은 추가 RL 단계 없이도, teacher 모델의 Reasoning 능력을 소형 모델에 효과적으로 내재화시킨다.
-
-
-
-
-## Method
-
-DeepSeek‑R1을 사용하여 Reasoning 데이터셋을 생성하고, 이를 기반으로 소형 모델을 SFT한다.
-
-
-
-📌 *Distillated models*
-
-![distillated-models](/images/2025-02-25-DeepSeek-R1/distillated-models.png){: .align-center}
-
-
-
-# Performance
-
-DeepSeek‑R1은 AIME 2024, MATH‑500, Codeforces, MMLU 등 다양한 Reasoning 벤치마크에서 OpenAI‑o1‑1217과 유사하거나 그 이상의 성능을 보여준다. 특히, 수학 및 코딩 태스크에서 뛰어난 능력을 확인할 수 있다.
-
-
-
-📌 *Performance*
-
-![DeepSeek-R1-Evaluation](/images/2025-02-25-DeepSeek-R1/DeepSeek-R1-Evaluation.png){: .align-center}
+- **컨텍스트 확장:**
+  - MiniMax-01 시리즈는 기존 모델 대비 20~32배 긴 컨텍스트를 지원, 긴 문서 처리 및 복잡한 상호참조 작업에서 탁월한 성능 발휘
+- **연산 및 메모리 효율성:**
+  - Lightning Attention 도입으로 전통적 softmax attention에 비해 연산량이 극적으로 줄어들었으며, 실제 조건에서 1M 토큰 처리 시 약 1000배 절감 효과가 있음
+- **실험 결과:**
+  - MiniMax-01은 최신 모델(GPT-4o, Claude-3.5-Sonnet)과 동등한 성능을 보이며, 특히 초장문 처리 및 긴 컨텍스트 모델링에서 확연한 우위를 보임
 
 
 
 
 # 후기
 
-DeepSeek‑R1은 Interim Reasoning Model을 활용해 효율적으로 reasoning 성능을 끌어올린 첫 케이스로, 다음과 같은 점에서 주목할 만하다.
-
-- **R1의 학습 방식의 장점**:
-  - DeepSeek‑R1은 소량의 고품질 Cold Start Data와 순수 RL을 통해, 훨씬 적게 확보된 초기 데이터로도 강력한 Reasoning 능력을 확보했다.
-  
-- **효율성 증대를 위한 노력**:
-  + R1 Pipeline은 Base model에서 바로 Interim Reasoning Model 구축 및 SFT 데이터를 효과적으로 생성하는 전략으로 Traditional Pipeline 대비 뛰어난 학습 효율을 낸다.
-  + 또한, Distillation을 통해 소형 Reasoning 모델로도 확장하여 실용성을 높였다.
+MiniMax-01은 Lightning Attention을 핵심 혁신으로, 초대형 모델의 확장성과 초장문 처리 문제를 효과적으로 해결한 사례다. 특히, 기존 기술의 한계를 체계적으로 보완한 점에서, 향후 다양한 모달리티와 다운스트림 작업에 응용될 수 있는 잠재력이 크다. Lightning Attention의 구체적인 설계와 효율성을 볼 때,  model scaling에서 적용 및 발전의 여지가 충분하다.
 
