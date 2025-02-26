@@ -82,12 +82,12 @@ MiniMax-01의 학습은 일반적인 LLM 학습 과정과 같이 **Pre-training*
 
      AdamW
 
-    - $β1=0.9\beta_1 = 0.9β1=0.9, β2=0.98\beta_2 = 0.98β2=0.98$
-    - Weight Decay = 0.01
+    - $β1=0.9$, $β1=0.9$, $β2=0.98$
+    - Weight Decay = $0.01$
 
   - Scheduler:
 
-    - Initial Learning Rate: $1×10−41 \times 10^{-4}1×10−4$
+    - Initial Learning Rate: $1×10^{−4}$
     - 초기 10k steps 동안 linear warmup 진행
     - 이후 cosine decay으로 총 500k steps에 걸쳐 학습
 
@@ -136,10 +136,10 @@ MiniMax-01의 핵심 혁신은 **Lightning Attention**에 있다. 이 섹션에�
 
 ## Softmax Attention
 
-- **수식:** $Attention(Q,K,V)=softmax(QK⊤d)V\text{Attention}(Q, K, V) = \text{softmax}\Bigl(\frac{QK^\top}{\sqrt{d}}\Bigr)VAttention(Q,K,V)=softmax(dQK⊤)V$
+- **수식:** $\text{Attention}(Q, K, V) = \text{softmax}\Bigl(\frac{QK^\top}{\sqrt{d}}\Bigr)V$
 - 계산 복잡도:
-  - $O(n2⋅d)O(n^2 \cdot d)O(n2⋅d)$
-    - $nnn$: sequence length, $ddd$: feature dimension
+  - $O(n^2 \cdot d)$
+    - $n$: sequence length, $d$: feature dimension
   - Long Context 처리 시 메모리와 연산 비용이 급격히 증가
 
 
@@ -149,11 +149,11 @@ MiniMax-01의 핵심 혁신은 **Lightning Attention**에 있다. 이 섹션에�
 - **핵심 아이디어:**
   - “Right product kernel trick”을 활용하여 Attention 연산의 quadratic 복잡도를 선형 복잡도로 변환
 - **수식 변환:**
-  - 기존 NormAttention: $O=Norm((QK⊤)V)O = \text{Norm}((QK^\top)V)O=Norm((QK⊤)V)$
-  - 오른쪽 행렬 곱셈을 이용한 변형: $O=Norm(Q(K⊤V))O = \text{Norm}(Q(K^\top V))O=Norm(Q(K⊤V))$
+  - 기존 NormAttention: $O = \text{Norm}((QK^\top)V)$
+  - 오른쪽 행렬 곱셈을 이용한 변형: $O = \text{Norm}(Q(K^\top V))$
 - **복잡도:**
-  - $O(nd2)O(nd^2)O(nd2)$
-  - **장점:** Recurrent prediction에 적합하며, $K⊤VK^\top VK⊤V$를 미리 계산하여 반복 계산을 줄임
+  - $O(nd^2)$
+  - **장점:** Recurrent prediction에 적합하며, $K^\top V$를 미리 계산하여 반복 계산을 줄임
   - **단점:** Causal language modeling에서는 오른쪽 곱셈의 효율성이 떨어지고, cumsum 연산이 필요하여 병렬화에 한계가 있음
 
 
@@ -164,17 +164,17 @@ MiniMax-01의 핵심 혁신은 **Lightning Attention**에 있다. 이 섹션에�
 
 - **핵심 개선점:**
   - Tiling 기법 도입:
-    - Q, K, V 행렬을 $B×dB \times dB×d$ 크기의 블록으로 분할하여 계산
+    - Q, K, V 행렬을 $B \times d$ 크기의 블록으로 분할하여 계산
   - Intra-block & Inter-block 분할:
     - Intra-block 계산:
       - 상대적으로 작은 블록 내에서는 **left product attention**을 사용하여 빠른 계산을 수행
-      - 수식 예시: $Ointra=[(QK⊤)⊙M]VO_{\text{intra}} = \Bigl[(QK^\top) \odot M\Bigr]VOintra=[(QK⊤)⊙M]V 여기서 Mts=1M_{ts}=1Mts=1 if t≥st \ge st≥s$
+      - 수식 예시: $O_{\text{intra}} = \Bigl[(QK^\top) \odot M\Bigr]V$ 여기서 $M_{ts}=1$ if $t \ge s$
     - Inter-block 계산:
       - 블록 간 누적된 값을 활용하는 **right product attention**을 사용
-      - 재귀적 업데이트: $kv0=0,kvt=kvt−1+ktvt⊤$,$ot⊤=qt⊤kvtkv_0 = 0$,$\quad kv_t = kv_{t-1} + k_t v_t^\top$,$\quad o_t^\top = q_t^\top kv_tkv0=0$,$kvt=kvt−1+ktvt⊤$,$ot⊤=qt⊤kvt$
+      - 재귀적 업데이트: $kv_0 = 0,\quad kv_t = kv_{t-1} + k_t v_t^\top,\quad o_t^\top = q_t^\top kv_t$
 - **Tiling을 통한 최종 연산 복잡도:**
-  - 최종 시간 복잡도는 $O(nd2+nBd)O(nd^2 + nBd)O(nd2+nBd)$로, $BBB$는 블록 사이즈
-  - 실제 실험에서는 $n=106n = 10^6n=106$, $d=1024d = 1024d=1024$ 조건에서 전통적 softmax attention 대비 연산량이 약 1000배 절감 효과를 보임
+  - 최종 시간 복잡도는 $O(nd^2 + nBd)$로, $B$는 블록 사이즈
+  - 실제 실험에서는 $n = 10^6$, $d = 1024$ 조건에서 전통적 softmax attention 대비 연산량이 약 1000배 절감 효과를 보임
 - **Hybrid 구조 내 Lightning Attention 적용:**
   - 전체 48 레이어의 Transformer 중 **초기 20 레이어**에 Lightning Attention을 적용하여, 글로벌(long-range) 정보를 효율적으로 집약
   - 나머지 28 레이어는 전통적 softmax attention을 사용해 지역적 세부 표현을 보완
@@ -184,9 +184,9 @@ MiniMax-01의 핵심 혁신은 **Lightning Attention**에 있다. 이 섹션에�
 
 **요약:**
 
-- *Softmax Attention:** $O(n2⋅d)O(n^2 \cdot d)O(n2⋅d)$ → 긴 시퀀스에 부적합
-- **Linear Attention:** $O(nd2)O(nd^2)O(nd2)$ → cumsum 연산 병목 존재
-- **Lightning Attention:** $O(nd2+nBd)O(nd^2 + nBd)O(nd2+nBd)$ → tiling 기법과 intra-/inter-block 분할을 통해 cumsum 병목 제거, 효율적 병렬 처리 및 I/O 최적화 달성
+- *Softmax Attention:** $O(n^2 \cdot d)$ → 긴 시퀀스에 부적합
+- **Linear Attention:** $O(nd^2)$ → cumsum 연산 병목 존재
+- **Lightning Attention:** $O(nd^2 + nBd)$ → tiling 기법과 intra-/inter-block 분할을 통해 cumsum 병목 제거, 효율적 병렬 처리 및 I/O 최적화 달성
 
 
 
