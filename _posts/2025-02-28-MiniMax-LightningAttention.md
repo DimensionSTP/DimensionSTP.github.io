@@ -134,6 +134,12 @@ MiniMax-01의 핵심 혁신은 **Lightning Attention**에 있다. 이 섹션에�
 
 
 
+📌 *Lightning Attention Architecture*
+
+![LightningAttention-Architecture](/images/2025-02-28-MiniMax-LightningAttention/LightningAttention-Architecture.png){: .align-center}
+
+
+
 ## Softmax Attention
 
 - **수식:** $\text{Attention}(Q, K, V) = \text{softmax}\Bigl(\frac{QK^\top}{\sqrt{d}}\Bigr)V$
@@ -176,15 +182,15 @@ MiniMax-01의 핵심 혁신은 **Lightning Attention**에 있다. 이 섹션에�
   - 최종 시간 복잡도는 $O(nd^2 + nBd)$로, $B$는 블록 사이즈
   - 실제 실험에서는 $n = 10^6$, $d = 1024$ 조건에서 전통적 softmax attention 대비 연산량이 약 1000배 절감 효과를 보임
 - **Hybrid 구조 내 Lightning Attention 적용:**
-  - 전체 48 레이어의 Transformer 중 **초기 20 레이어**에 Lightning Attention을 적용하여, 글로벌(long-range) 정보를 효율적으로 집약
-  - 나머지 28 레이어는 전통적 softmax attention을 사용해 지역적 세부 표현을 보완
+  - 매 8 레이어마다 **초기 7 레이어**에 Lightning Attention을 적용하여, 글로벌(long-range) 정보를 효율적으로 집약
+  - 나머지 1 레이어는 전통적 softmax attention을 사용해 지역적 세부 표현을 보완
   - Ablation study 결과, 이러한 Hybrid 구조가 모델 성능과 연산 효율성 측면에서 최적의 균형을 이루는 것으로 나타남
 
 
 
 **요약:**
 
-- *Softmax Attention:** $O(n^2 \cdot d)$ → 긴 시퀀스에 부적합
+- **Softmax Attention:** $O(n^2 \cdot d)$ → 긴 시퀀스에 부적합
 - **Linear Attention:** $O(nd^2)$ → cumsum 연산 병목 존재
 - **Lightning Attention:** $O(nd^2 + nBd)$ → tiling 기법과 intra-/inter-block 분할을 통해 cumsum 병목 제거, 효율적 병렬 처리 및 I/O 최적화 달성
 
