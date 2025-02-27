@@ -142,8 +142,10 @@ MiniMax-01의 핵심 혁신은 **Lightning Attention**에 있다. 이 섹션에�
 
 ## Softmax Attention
 
-- **수식:** $\text{Attention}(Q, K, V) = \text{softmax}\Bigl(\frac{QK^\top}{\sqrt{d}}\Bigr)V$
-- 계산 복잡도:
+- **수식:**
+  - $\text{Attention}(Q, K, V) = \text{softmax}\Bigl(\frac{QK^\top}{\sqrt{d}}\Bigr)V$
+
+- **계산 복잡도:**
   - $O(n^2 \cdot d)$
     - $n$: sequence length, $d$: feature dimension
   - Long Context 처리 시 메모리와 연산 비용이 급격히 증가
@@ -157,7 +159,7 @@ MiniMax-01의 핵심 혁신은 **Lightning Attention**에 있다. 이 섹션에�
 - **수식 변환:**
   - 기존 NormAttention: $O = \text{Norm}((QK^\top)V)$
   - 오른쪽 행렬 곱셈을 이용한 변형: $O = \text{Norm}(Q(K^\top V))$
-- **복잡도:**
+- **계산 복잡도:**
   - $O(nd^2)$
   - **장점:** Recurrent prediction에 적합하며, $K^\top V$를 미리 계산하여 반복 계산을 줄임
   - **단점:** Causal language modeling에서는 오른쪽 곱셈의 효율성이 떨어지고, cumsum 연산이 필요하여 병렬화에 한계가 있음
@@ -199,9 +201,9 @@ MiniMax-01의 핵심 혁신은 **Lightning Attention**에 있다. 이 섹션에�
 # Contributions
 
 - **컨텍스트 확장:**
-  - MiniMax-01 시리즈는 기존 모델 대비 20~32배 긴 컨텍스트를 지원, 긴 문서 처리 및 복잡한 상호참조 작업에서 탁월한 성능 발휘
+  - MiniMax-01 시리즈는 기존 모델 대비 20~32배 긴 extremely long context를 지원할 뿐만 아니라 성능 또한 뛰어남
 - **연산 및 메모리 효율성:**
-  - Lightning Attention 도입으로 전통적 softmax attention에 비해 연산량이 극적으로 줄어들었으며, 실제 조건에서 1M 토큰 처리 시 약 1000배 절감 효과가 있음
+  - Lightning Attention 도입으로 only softmax attention에 비해 연산량이 극적으로 줄어들었으며, 1M 토큰 처리 시 약 1000배 절감 효과가 있음
 - **실험 결과:**
   - MiniMax-01은 최신 모델(GPT-4o, Claude-3.5-Sonnet)과 동등한 성능을 보이며, 특히 초장문 처리 및 긴 컨텍스트 모델링에서 확연한 우위를 보임
 
