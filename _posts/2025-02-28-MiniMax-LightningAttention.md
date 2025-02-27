@@ -49,14 +49,10 @@ MiniMax-01 시리즈는 두 가지 모델로 구성된다.
 
   - **주요 데이터셋:** CommonCrawl, Wikipedia, BookCorpus, 뉴스 데이터 등
 
-  - 토큰 규모:
-
-     약 300B 이상의 토큰
-
-    - 여러 소스의 대규모 코퍼스를 통합하여 사용
-
+  - **토큰 규모:** 약 300B 이상의 토큰
+  - 여러 소스의 대규모 코퍼스를 통합하여 사용
+  
 - **VLM(MiniMax-VL-01):**
-
   - **주요 데이터셋:** COCO, Visual Genome, 그리고 자체 구축 image-text pair data
   - **토큰 규모:** 총 512B vision-language tokens
 
