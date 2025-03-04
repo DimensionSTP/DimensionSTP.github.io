@@ -17,6 +17,8 @@ typora-root-url: ../
 
 #  MiniMax Lightning Attention Review
 
+👉🏻[논문 링크](https://arxiv.org/pdf/2501.08313)
+
 최근 AI 모델 스케일링과 long context 처리에 대한 관심이 높아짐에 따라, MiniMax-01을 주목해볼 필요가 있다. 본 리뷰에서는 MiniMax-01 전체 모델의 개요를 소개하되, 특히 **Lightning Attention** 기술에 집중한다. 특히 세부 구조, 효율성, 그리고 기존의 Softmax 및 Linear Attention과의 차별점을 자세히 살펴본다.
 
 
