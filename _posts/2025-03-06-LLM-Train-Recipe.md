@@ -40,7 +40,7 @@ typora-root-url: ../
   - Llama 3.1 기반
   - Model parameters: 8B, 70B, 405B
 
-+ **Key points:**
+- **Key points:**
 
   - 자체 구축한 post-train dataset으로 SFT, DPO, RLVR을 단계별로 적용
   - 각 post-train 단계에서의 hyper-parameters 및 reconstruction script 공개
@@ -54,9 +54,9 @@ typora-root-url: ../
 - **Base models:**
 - Llama(>3.1) Architectures 기반
   - Model parameters: 135M, 360M, 1.7B
-- Pre-train부터 진행
+  - Pre-train부터 진행
 
-+ **Key points:**
+- **Key points:**
   - 자체 구축한 pre-train, post-train dataset으로 학습
   - 각 학습 단계에서의 hyper-parameters 공개
 
@@ -76,7 +76,7 @@ typora-root-url: ../
   - 다양한 태스크(대화, 수학, 코딩, 안전성 등)를 포함
   - 👉🏻[allenai/tulu-3-sft-mixture](https://huggingface.co/datasets/allenai/tulu-3-sft-mixture)
 
-+ **Preference Tuning(DPO) 데이터:**
+- **Preference Tuning(DPO) 데이터:**
   - SFT 단계의 출력과 타 모델의 응답을 비교하여 구성된 on-policy 데이터
   - 👉🏻[allenai/llama-3.1-tulu-3-405b-preference-mixture](https://huggingface.co/datasets/allenai/llama-3.1-tulu-3-405b-preference-mixture)
   - 👉🏻[allenai/llama-3.1-tulu-3-70b-preference-mixture](https://huggingface.co/datasets/allenai/llama-3.1-tulu-3-70b-preference-mixture)
@@ -90,13 +90,13 @@ typora-root-url: ../
 
 ## SmolLM2
 
-+ **Pre-training 데이터:**
+- **Pre-training 데이터:**
 
   - 웹 크롤 데이터(예: CommonCrawl, 뉴스, 블로그) 및 위키피디아, 도서, 논문 등
 
   - 약 11T tokens의 정제된 데이터를 활용
 
-+ **Supervised Fine-Tuning (SFT) 데이터:**
+- **Supervised Fine-Tuning (SFT) 데이터:**
 
   - 공개 인스트럭션 데이터와 자체 synthetic 데이터의 혼합
 
@@ -106,16 +106,16 @@ typora-root-url: ../
 
 ## 학습 데이터 비교 및 공통점
 
-+ **공개성:**
+- **공개성:**
   - 두 모델 모두 모든 데이터셋을 공개하여, 연구자들이 동일 조건에서 실험 재현 및 커스터마이징이 가능하도록 지원
 
-+ **데이터 믹싱 전략:**
+- **데이터 믹싱 전략:**
 
   - Tülu 3는 포스트 트레이닝을 위한 단계별 데이터 큐레이션에 집중
 
   - SmolLM2는 대규모 Pre-training 데이터를 기반으로 언어 모델의 범용성을 극대화한 후, 태스크별 Fine-tuning 데이터로 성능을 보완
 
-+ **목표:**
+- **목표:**
   - 두 모델 모두 다양한 태스크를 커버하기 위해, 여러 도메인과 문체의 데이터를 혼합하는 전략을 취함
 
 
@@ -130,7 +130,7 @@ typora-root-url: ../
 
 **학습 단계:**
 
-+ **Supervised Finetuning (SFT):**
+- **Supervised Finetuning (SFT):**
 
   - **Optimizer:** AdamW (β₁=0.9, β₂=0.999, ε=1×10⁻⁸)
 
@@ -142,7 +142,7 @@ typora-root-url: ../
 
   - **Total Steps:** 8B: 10,000, 70B: 15,000, 405B: 20,000
 
-+ **Preference Tuning(DPO):**
+- **Preference Tuning(DPO):**
 
   - **Learning Rate:** 1×10⁻⁵
 
@@ -152,7 +152,7 @@ typora-root-url: ../
 
   - **Temperature (τ):** 0.1, **Regularization:** 0.01
 
-+ **Reinforcement Learning with Verifiable Rewards (RLVR, PPO, 8B 전용):**
+- **Reinforcement Learning with Verifiable Rewards (RLVR, PPO, 8B 전용):**
 
   - **Algorithm:** PPO 기반 RLVR
 
@@ -172,7 +172,7 @@ typora-root-url: ../
 
 **학습 단계:**
 
-+ **Pre-training:**
+- **Pre-training:**
 
   - **Optimizer:** AdamW (β₁ = 0.9, β₂ = 0.98, ε = 1e-9)
 
@@ -208,7 +208,7 @@ typora-root-url: ../
 
   - **Checkpoint:** 매 1,000 steps 저장
 
-+ **Preference Tuning(DPO, Optional):**
+- **Preference Tuning(DPO, Optional):**
   - **Temperature:** 0.1
   - **Regularization:** 0.01
   - **Steps**: 5,000
@@ -217,19 +217,19 @@ typora-root-url: ../
 
 ## 비교 및 인사이트
 
-+ **Tülu 3:**
+- **Tülu 3:**
 
   - Llama 3.1 기반의 모델에 대해 후처리(post-training)로 SFT, Preference 튜닝, RLVR 단계를 적용
 
   - 모델 크기에 따른 세밀한 파라미터 조정이 돋보임
 
-+ **SmolLM2:**
+- **SmolLM2:**
 
   - Pre-training부터 시작하여, 대규모 데이터로 범용 언어 모델을 구축한 후 Fine-tuning으로 특정 태스크에 맞춤
 
   - Pre-training 단계의 데이터 규모(약 50B 토큰)와 긴 학습 스텝이 특징
 
-+ **공통점:**
+- **공통점:**
 
   - 모든 단계에서 AdamW optimizer 사용, warm up 및 weight decay 적용
 
@@ -247,7 +247,7 @@ typora-root-url: ../
 
 ## Tülu 3
 
-+ **8B:**
+- **8B:**
 
   - SFT: `allenai/Llama-3.1-Tulu-3-8B-SFT`
 
@@ -257,7 +257,7 @@ typora-root-url: ../
 
   - 보상 모델(RM): `allenai/Llama-3.1-Tulu-3-8B-RM`
 
-+ **70B:**
+- **70B:**
 
   - SFT: `allenai/Llama-3.1-Tulu-3-70B-SFT`
 
@@ -265,7 +265,7 @@ typora-root-url: ../
 
   - 최종 모델: `allenai/Llama-3.1-Tulu-3-70B`
 
-+ **405B:**
+- **405B:**
 
   - SFT: `allenai/Llama-3.1-Tulu-3-405B-SFT`
 
@@ -275,19 +275,19 @@ typora-root-url: ../
 
 ## SmolLM2
 
-+ **135M:**
+- **135M:**
 
   - Base: `HuggingFaceTB/SmolLM2-135M`
 
   - Instruct: `HuggingFaceTB/SmolLM2-135M-Instruct`
 
-+ **360M:**
+- **360M:**
 
   - Base: `HuggingFaceTB/SmolLM2-360M`
 
   - Instruct: `HuggingFaceTB/SmolLM2-360M-Instruct`
 
-+ **1.7B:**
+- **1.7B:**
 
   - Base: `HuggingFaceTB/SmolLM2-1.7B`
 
