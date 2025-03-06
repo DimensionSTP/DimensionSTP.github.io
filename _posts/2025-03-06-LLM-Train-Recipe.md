@@ -92,21 +92,35 @@ typora-root-url: ../
 
 - **Pre-training 데이터:**
   - **구성:**
-    - **Wikipedia:** 최신 위키피디아 덤프 ([Wikimedia Dumps](https://dumps.wikimedia.org/))
-    - **Common Crawl:** 웹 크롤링 데이터 ([Common Crawl](https://commoncrawl.org/))
-    - **BooksCorpus 및 추가 웹 데이터:** 도서 및 기타 공개 웹 자료
-  - **총 토큰 수:** 약 **300B 토큰** (최종 정제 데이터셋 기준)
-  - **Train epochs:** 전체 데이터셋에 대해 **1 epoch** (여러 단계의 학습으로 진행)
+    - **FineWeb-Edu**: 1.3조 토큰 규모의 필터링된 교육 콘텐츠 기반 웹 데이터셋  
+    - **DCLM (DataComp-LM baseline)**: 300조+ 원시(raw) 토큰에서 필터링한 CommonCrawl 데이터셋  
+    - **The Stack**: 오픈소스 코드 데이터셋  
+    - **FineMath**: 새롭게 구축한 수학 데이터셋  
+    - **Stack-Edu**: 코딩 학습을 위한 필터링된 코드 데이터  
+  - **요약**
+
+| **Models**       | **Sources**                                       | **Amounts** |
+|------------------|---------------------------------------------------|-------------|
+| **SmolLM2-135M** | FineWeb-Edu, DCLM, The Stack, FineMath, Stack-Edu | ~2T tokens  |
+| **SmolLM2-360M** | FineWeb-Edu, DCLM, The Stack, FineMath, Stack-Edu | ~4T tokens  |
+| **SmolLM2-1.7B** | FineWeb-Edu, DCLM, The Stack, FineMath, Stack-Edu | ~11T tokens |
+
 - **Supervised Fine-Tuning (SFT) 데이터:**
   - **구성:**
-    - **Task-specific dataset:** 질문-응답, 요약, 분류 등 다양한 NLP 태스크를 위한 데이터
-    - **Instruction dataset:** 모델의 instruction-following 성능 강화를 위한 추가 데이터 (예, smol_instruct 등)
-  - **총 토큰 수:** 약 **10B 토큰** (최종 정제 데이터셋 기준; 추정치)
-  - **Train epochs:** Fine-tuning 단계에서는 약 **2~3 epochs** 동안 학습 진행
+    - **SmolTalk**: LLaMA 3.1 기반의 Instruction-Tuning 데이터셋으로, 공개 데이터 및 자체 생성 데이터(Smol-Magpie-Ultra, Smol-Rewrite 등)를 포함  
+    - **UltraFeedback**: GPT-4가 채점한 64k 프롬프트 및 선호도 비교 데이터를 포함하여 학습
+  - **요약**
+
+| **Models**       | **SFT(Supervised Fine-Tuning)**       | **DPO(Direct Preference Optimization)** | **Sources**            |
+|------------------|---------------------------------------|-----------------------------------------|------------------------|
+| **SmolLM2-135M** | SmolTalk(filtered, 약 0.5M 개 samples) | UltraFeedback (~61k prompts pair)      | SmolTalk, UltraFeedback |
+| **SmolLM2-360M** | SmolTalk(filtered, 약 0.5M 개 samples) | UltraFeedback (~61k prompts pair)      | SmolTalk, UltraFeedback |
+| **SmolLM2-1.7B** | SmolTalk(entire, 약 1.1M 개)           | UltraFeedback (~61k prompts pair)      | SmolTalk, UltraFeedback |
+
   - **추가 정보:**
     - 데이터셋 소스 및 정제 관련 세부 정보는 리포트 부록 및 공개 저장소에서 확인 가능
     - 👉🏻[smollm2 Dataset Repository](https://github.com/smollm2/dataset)
-  
+
 
 
 
@@ -603,44 +617,49 @@ Pre-training, Fine-tuning에 대해 표로 정리해본다.
 
 ### Pre-training
 
-Pre-training은 세 단계로 진행된다.
+모든 SmolLM2 모델은 **AdamW Optimizer**와 **Warmup–Stable–Decay(WSD) LR Scheduler**를 사용하여 학습시켰다.
 
-| Stage                              | Parameter       | 135M                     | 360M                     | 1.7B                      |
-|------------------------------------|-----------------|--------------------------|--------------------------|---------------------------|
-| **Stage 1 (Warmup 초기 학습)**     | Learning Rate   | 3×10⁻⁴                  | 3×10⁻⁴                  | 3×10⁻⁴                   |
-|                                    | Warmup Steps    | 500                      | 500                      | 500                       |
-|                                    | Batch Size      | 128                      | 256                      | 512                       |
-|                                    | Epochs/Steps    | 1 epoch (~10k steps)     | 1 epoch (~10k steps)     | 1 epoch (~10k steps)      |
-|                                    | Sequence Length | 512                      | 512                      | 512                       |
-| **Stage 2 (Main Pre-training)**    | Learning Rate   | 2×10⁻⁴                  | 2×10⁻⁴                  | 2×10⁻⁴                   |
-|                                    | Warmup Steps    | 1,000                    | 1,000                    | 1,000                     |
-|                                    | Batch Size      | 128                      | 256                      | 512                       |
-|                                    | Epochs/Steps    | 2 epochs (~20k steps)    | 2 epochs (~20k steps)    | 2 epochs (~20k steps)     |
-|                                    | Sequence Length | 1,024                    | 1,024                    | 1,024                     |
-| **Stage 3 (Final 조정 단계)**      | Learning Rate   | 1×10⁻⁴                  | 1×10⁻⁴                  | 1×10⁻⁴                   |
-|                                    | Warmup Steps    | 1,500                    | 1,500                    | 1,500                     |
-|                                    | Batch Size      | 128                      | 256                      | 512                       |
-|                                    | Epochs/Steps    | 3 epochs (~30k steps)    | 3 epochs (~30k steps)    | 3 epochs (~30k steps)     |
-|                                    | Sequence Length | 1,024                    | 1,024                    | 1,024                     |
+- **요약**
+
+| **Models** | **Trained Tokens** | **Optimizer** | **Learning Rate(Peak)** | **LR Scheduler**    | **Warmup Steps** | **Sequence Length** | **Global Batch Size** |
+|------------|--------------------|---------------|-------------------------|---------------------|------------------|---------------------|-----------------------|
+| **135M**   | ~2T                | AdamW         | ~3.0×10^-3              | WSD (Stable, Decay) | 2000             | 2048                | 2M tokens             |
+| **360M**   | ~4T                | AdamW         | ~3.0×10^-3              | WSD (Stable, Decay) | 2000             | 2048                | 2M tokens             |
+| **1.7B**   | ~11T               | AdamW         | ~5.0×10^-4              | WSD (Stable, Decay) | 2000             | 2048                | 2M tokens             |
+
+- **설명**
+  - AdamW (β₁=0.9, β₂=0.999) Optimizer 사용  
+  - LR Scheduling: **초기 2000 스텝 Warmup → 일정 유지(Stable) → 마지막 10% Decay**  
+  - 1.7B 모델은 **4단계 학습(0-6T, 6-8T, 8-10T, 10-11T) 진행**  
+  - 135M 및 360M 모델은 **수학 및 코딩 데이터가 후반부에 집중적으로 투입됨**  
 
 
 
-### Fine-tuning
+### Supervised Fine-Tuning(SFT)
 
-Fine-tuning은 두 단계로 진행된다.
+SmolTalk 데이터셋을 사용하여 Instruction-Following 능력을 학습시켰다.
 
-| Stage                                        | Parameter       | 135M                     | 360M                     | 1.7B                      |
-|----------------------------------------------|-----------------|--------------------------|--------------------------|---------------------------|
-| **Stage 1 (Task-specific 초기 Fine-tuning)** | Learning Rate   | 5×10⁻⁵                  | 5×10⁻⁵                  | 5×10⁻⁵                   |
-|                                              | Warmup Steps    | 200                      | 200                      | 200                       |
-|                                              | Batch Size      | 64                       | 64                       | 64                        |
-|                                              | Epochs/Steps    | 3 epochs (~15k steps)    | 3 epochs (~15k steps)    | 3 epochs (~15k steps)     |
-|                                              | Sequence Length | 512                      | 512                      | 512                       |
-| **Stage 2 (Instruction 중심 Fine-tuning)**   | Learning Rate   | 3×10⁻⁵                  | 3×10⁻⁵                  | 3×10⁻⁵                   |
-|                                              | Warmup Steps    | 100                      | 100                      | 100                       |
-|                                              | Batch Size      | 64                       | 64                       | 64                        |
-|                                              | Epochs/Steps    | 2 epochs (~10k steps)    | 2 epochs (~10k steps)    | 2 epochs (~10k steps)     |
-|                                              | Sequence Length | 512                      | 512                      | 512                       |
+- **요약**
+
+| **Models** | **Trained Samples** | **Optimizer** | **Learning Rate(Peak)** | **LR Scheduler**    | **Epochs**  | **Sequence Length** | **Global Batch Size** |
+|------------|---------------------|---------------|-------------------------|---------------------|-------------|---------------------|-----------------------|
+| **135M**   | ~0.5M               | AdamW         | ~3.0×10^-4              | WSD (Stable, Decay) | 2           | 8192                | 128                   |
+| **360M**   | ~0.5M               | AdamW         | ~3.0×10^-4              | WSD (Stable, Decay) | 2           | 8192                | 128                   |
+| **1.7B**   | ~1.1M               | AdamW         | ~3.0×10^-4              | WSD (Stable, Decay) | 2           | 8192                | 128                   |
+
+
+
+### Direct Preference Optimization(DPO)
+
+UltraFeedback 데이터셋을 사용하여 모델 출력을 인간 선호도에 맞게 최적화시켰다.
+
+- **요약**
+
+| **Models** | **DPO Pairs** | **Optimizer** | **Learning Rate(Peak)** | **LR Scheduler**    | **Epochs**  | **Sequence Length** | **Global Batch Size** | **DPO beta** |
+|------------|---------------|---------------|-------------------------|---------------------|-------------|---------------------|-----------------------|--------------|
+| **135M**   | ~61k          | AdamW         | ~1.0×10^-6              | WSD (Stable, Decay) | 2           | 1024                | 128                   | 0.5          |
+| **360M**   | ~61k          | AdamW         | ~1.0×10^-6              | WSD (Stable, Decay) | 2           | 1024                | 128                   | 0.5          |
+| **1.7B**   | ~61k          | AdamW         | ~1.0×10^-6              | WSD (Stable, Decay) | 2           | 1024                | 128                   | 0.5          |
 
 
 
