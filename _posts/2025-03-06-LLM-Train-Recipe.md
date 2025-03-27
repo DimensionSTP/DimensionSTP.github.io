@@ -17,6 +17,10 @@ typora-root-url: ../
 
 #  LLM Train Recipe
 
+![Logo](/images/2025-03-06-LLM-Train-Recipe/logo.png){: .align-center}
+
+
+
 👉🏻[Tulu3 paper link](https://arxiv.org/pdf/2411.15124)
 
 👉🏻[SmolLM2 paper link](https://arxiv.org/html/2502.02737v1)
