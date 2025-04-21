@@ -210,7 +210,7 @@ Stable Diffusion이 불러온 혁신은 modality transfer를 가속했지만, �
 
 1) dVAE or Tokenizer: Image → Tokens
 
-2) AR LM: $p(x_t|x_{<t})$
+2) Autoregressive LM: $p(x_t \mid x_{<t})$
 
 3) dVAE‑Decode: Tokens → RGB
 
