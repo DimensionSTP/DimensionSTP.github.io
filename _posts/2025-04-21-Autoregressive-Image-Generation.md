@@ -208,13 +208,13 @@ Stable Diffusion이 불러온 혁신은 modality transfer를 가속했지만, �
 
 ## 3-1. Autoregressive Pipeline
 
-- 1) dVAE or Tokenizer: Image → Tokens
+1) dVAE or Tokenizer: Image → Tokens
 
-- 2) AR LM: $p(x_t|x_{<t})$
+2) AR LM: $p(x_t|x_{<t})$
 
-- 3) dVAE‑Decode: Tokens → RGB
+3) dVAE‑Decode: Tokens → RGB
 
-- 4) (선택) Patch Denoise / SR
+4) (Option) Patch Denoise / SR
 
 **전역 이어쓰기** : Text · Pixel 모두 동일 loss → Multimodal Integration에서 무손실.
 
@@ -222,13 +222,13 @@ Stable Diffusion이 불러온 혁신은 modality transfer를 가속했지만, �
 
 ## 3-2. Latent Diffusion Pipeline
 
-- 1) 원본 RGB → Latent $z$
+1) 원본 RGB → Latent $z$
 
-- 2) 반복 Noise $t!!\downarrow$ → $z_0$ 예측
+2) 반복 Noise $t!!\downarrow$ → $z_0$ 예측
 
-- 3) Latent → RGB decode
+3) Latent → RGB decode
 
-- 4) (선택) UpSampler
+4) (Option) UpSampler
 
 **장점** : 글로벌 질감·빛·그레인 표현.
 
