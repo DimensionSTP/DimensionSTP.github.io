@@ -1,7 +1,7 @@
 ---
 layout: single
 title:  "차세대 LLM 아키텍처 혁신: 효율성을 위한 하이브리드 전략 (Nemotron-H, Qwen3-Next, Kimi Linear 분석)"
-categories: Code
+categories: Study-concept
 tag: [Transformer, LLM, ViT, Architecture]
 toc: true
 author_profile: false

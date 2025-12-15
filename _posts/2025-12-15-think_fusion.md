@@ -1,7 +1,7 @@
 ---
 layout: single
 title:  "Think-Fusion의 다양한 구현 방식 비교 리뷰: Qwen3, DeepSeek V3.1, Llama Nemotron을 중심으로"
-categories: Code
+categories: Study-concept
 tag: [LLM, CoT, Reasoning, Hybrid-thinking, Think-fusion]
 toc: true
 author_profile: false

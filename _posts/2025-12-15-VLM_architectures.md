@@ -1,7 +1,7 @@
 ---
 layout: single
 title:  "Qwen VLs vs DeepSeek-OCR: 멀티모달 LLM 아키텍처, 목적, 학습 전략 심층 리뷰"
-categories: Code
+categories: Study-concept
 tag: [VLM, OCR, Qwen-VL, DeepSeek-OCR, Architecture]
 toc: true
 author_profile: false

@@ -1,7 +1,7 @@
 ---
 layout: single
 title:  "고전 Transformer 구조의 진화: LLM과 ViT 아키텍처 비교 분석"
-categories: Code
+categories: Study-concept
 tag: [Transformer, LLM, ViT, Architecture]
 toc: true
 author_profile: false
