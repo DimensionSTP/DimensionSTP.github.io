@@ -87,7 +87,7 @@ typora-root-url: ../
   - 👉🏻[allenai/llama-3.1-tulu-3-8b-preference-mixture](https://huggingface.co/datasets/allenai/llama-3.1-tulu-3-8b-preference-mixture)
 
 - **RLVR(PPO) 데이터 (8B 모델 전용):**
-  - GSM8K, MATH, IFEval 등 “검증 가능한 정답” 여부에 따른 보상 체계 데이터
+  - GSM8K, MATH, IFEval 등 "검증 가능한 정답" 여부에 따른 보상 체계 데이터
   - 👉🏻[allenai/RLVR-GSM-MATH-IF-Mixed-Constraints](https://huggingface.co/datasets/allenai/RLVR-GSM-MATH-IF-Mixed-Constraints)
 
 
@@ -621,7 +621,7 @@ Pre-training, Fine-tuning에 대해 표로 정리해본다.
 
 ### Pre-training
 
-모든 SmolLM2 모델은 **AdamW Optimizer**와 **Warmup–Stable–Decay(WSD) LR Scheduler**를 사용하여 학습시켰다.
+모든 SmolLM2 모델은 **AdamW Optimizer**와 **Warmup-Stable-Decay(WSD) LR Scheduler**를 사용하여 학습시켰다.
 
 - **요약**
 
@@ -633,7 +633,7 @@ Pre-training, Fine-tuning에 대해 표로 정리해본다.
 
 - **설명**
   - AdamW (β₁=0.9, β₂=0.999) Optimizer 사용  
-  - LR Scheduling: **초기 2000 스텝 Warmup → 일정 유지(Stable) → 마지막 10% Decay**  
+  - LR Scheduling: **초기 2000 스텝 Warmup -> 일정 유지(Stable) -> 마지막 10% Decay**  
   - 1.7B 모델은 **4단계 학습(0-6T, 6-8T, 8-10T, 10-11T) 진행**  
   - 135M 및 360M 모델은 **수학 및 코딩 데이터가 후반부에 집중적으로 투입됨**  
 

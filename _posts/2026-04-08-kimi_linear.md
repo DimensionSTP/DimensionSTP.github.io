@@ -15,17 +15,17 @@ typora-root-url: ../
 
 [Paper link](https://arxiv.org/abs/2510.26692)
 
-Kimi Linear는 “linear attention이 정말 full attention의 대체재가 될 수 있는가”라는 질문에 가장 정면으로 답한 논문 중 하나다. 이 논문이 흥미로운 이유는 단순히 선형 attention 커널 하나를 제안한 것이 아니라, **KDA라는 token mixer, 3:1 hybrid layer layout, NoPE 기반 position strategy, 그리고 실제 serving까지 고려한 open implementation**을 하나의 설계 묶음으로 제시했기 때문이다.
+Kimi Linear는 "linear attention이 정말 full attention의 대체재가 될 수 있는가"라는 질문에 가장 정면으로 답한 논문 중 하나다. 이 논문이 흥미로운 이유는 단순히 선형 attention 커널 하나를 제안한 것이 아니라, **KDA라는 token mixer, 3:1 hybrid layer layout, NoPE 기반 position strategy, 그리고 실제 serving까지 고려한 open implementation**을 하나의 설계 묶음으로 제시했기 때문이다.
 
 > 한 줄 요약: Kimi Linear는 Gated DeltaNet을 channel-wise gating으로 확장한 KDA와 periodic full attention을 결합해, 공정 비교에서 full attention MLA를 넘어서는 품질과 더 나은 long-context 효율을 동시에 노린 하이브리드 아키텍처다.
 
 이 논문을 지금 볼 가치가 있는 이유는 다음과 같음.
 
 - long-context와 RL test-time scaling에서 attention bottleneck을 어떻게 풀지에 대한 답을 꽤 구체적으로 준다.
-- “pure linear attention”이 아니라 “왜 hybrid가 현실적인가”를 실험과 시스템 관점에서 같이 보여준다.
+- "pure linear attention"이 아니라 "왜 hybrid가 현실적인가"를 실험과 시스템 관점에서 같이 보여준다.
 - open kernel, vLLM integration, 1M context checkpoint까지 공개되어 있어 아이디어가 논문 안에만 머물지 않는다.
 
-내가 보기엔 이 논문을 “linear attention이 full attention을 이겼다”로 읽기보다, **토큰 믹서, position handling, layer layout, serving path를 한 번에 다시 설계해야 full attention을 실질적으로 대체할 수 있다**는 사례로 읽는 편이 더 정확하다.
+내가 보기엔 이 논문을 "linear attention이 full attention을 이겼다"로 읽기보다, **토큰 믹서, position handling, layer layout, serving path를 한 번에 다시 설계해야 full attention을 실질적으로 대체할 수 있다**는 사례로 읽는 편이 더 정확하다.
 
 # 1. Problem Setting
 
@@ -33,7 +33,7 @@ Kimi Linear는 “linear attention이 정말 full attention의 대체재가 될 
 - 이 논문이 겨냥하는 핵심 문제는 단순한 prefill 비용 절감이 아니다.
 - 저자들이 더 직접적으로 겨냥하는 것은 **long-horizon inference, agentic workload, RL test-time scaling**에서 드러나는 full attention의 구조적 병목이다.
 - softmax attention은 시퀀스 길이에 대해 quadratic time complexity를 갖고, KV cache도 길이에 따라 선형으로 증가한다. 따라서 긴 trajectory, 긴 context, 긴 generation이 동시에 필요한 상황에서 속도와 메모리 비용이 빠르게 커진다.
-- 논문의 목표는 “조금 더 빠른 linear attention”이 아니라, **full attention 수준의 품질을 유지하거나 넘어서는 동시에 속도와 메모리 효율을 확보하는 attention architecture**를 만드는 것이다.
+- 논문의 목표는 "조금 더 빠른 linear attention"이 아니라, **full attention 수준의 품질을 유지하거나 넘어서는 동시에 속도와 메모리 효율을 확보하는 attention architecture**를 만드는 것이다.
 
 ## 1-2. Why previous approaches are insufficient
 - linear attention은 오랫동안 복잡도 측면에서는 매력적이었지만, language modeling 품질에서는 softmax attention보다 약한 경우가 많았다.
@@ -52,8 +52,8 @@ Kimi Linear는 “linear attention이 정말 full attention의 대체재가 될 
 ## 2-2. Design intuition
 - 이 논문의 설계 직관은 꽤 분명하다. **retrieval은 완전히 버릴 수 없고, full attention은 완전히 유지하기엔 비싸다.**
 - 그래서 대부분의 layer는 KDA로 돌려 효율을 확보하고, 소수의 global MLA layer로 전체 문맥을 다시 연결한다.
-- 여기에 channel-wise forgetting을 넣어 recurrent memory를 더 정교하게 제어하면, linear attention의 가장 약한 지점이던 “무엇을 얼마나 잊을지”를 더 세밀하게 다룰 수 있다.
-- 결과적으로 이 논문의 핵심은 “linear attention을 더 빠르게 만들었다”가 아니라, **linear attention이 실제로 일할 수 있는 하이브리드 operating point를 찾았다**는 데 있다.
+- 여기에 channel-wise forgetting을 넣어 recurrent memory를 더 정교하게 제어하면, linear attention의 가장 약한 지점이던 "무엇을 얼마나 잊을지"를 더 세밀하게 다룰 수 있다.
+- 결과적으로 이 논문의 핵심은 "linear attention을 더 빠르게 만들었다"가 아니라, **linear attention이 실제로 일할 수 있는 하이브리드 operating point를 찾았다**는 데 있다.
 
 # 3. Architecture / Method
 
@@ -79,7 +79,7 @@ Kimi Linear는 “linear attention이 정말 full attention의 대체재가 될 
 - 논문에서 KDA의 중요한 포인트는 수식 그 자체보다도 **일반 DPLR을 그대로 구현하지 않았다는 점**이다.
 - 저자들은 KDA가 generalized DPLR과 비슷한 표현력을 유지하면서도, 특정 변수들을 묶는 제약을 통해 second-level chunk computation 수를 줄이고 추가 matrix multiplication도 제거했다고 설명한다.
 - 요지는 간단하다. **linear attention의 이론적 장점이 실제 kernel efficiency로 이어지려면 recurrence 수식뿐 아니라 병렬화 방식까지 같이 설계되어야 한다**는 것이다.
-- 따라서 KDA는 단순한 “새로운 attention rule”이 아니라, **rule + chunk algorithm + hardware path**가 같이 묶인 제안으로 보는 편이 맞다.
+- 따라서 KDA는 단순한 "새로운 attention rule"이 아니라, **rule + chunk algorithm + hardware path**가 같이 묶인 제안으로 보는 편이 맞다.
 
 ### 3) 3:1 hybrid layout
 - 저자들은 pure linear attention의 가장 큰 약점이 여전히 long-context retrieval이라고 본다.
@@ -107,7 +107,7 @@ Kimi Linear는 “linear attention이 정말 full attention의 대체재가 될 
 - 각 모델은 256 experts 중 8개를 활성화하고, shared expert 1개를 포함한다. 전체 파라미터는 48B, active parameter는 3B 수준이다.
 - 첫 레이어는 안정성을 위해 dense layer로 둔다.
 - pretraining은 4096 context, MuonClip optimizer, WSD learning-rate schedule, global batch size 32M tokens, learning rate 1.1e-3로 맞춘다.
-- SFT는 broad instruction-following → reasoning-intensive targeted training의 **multi-stage SFT**로 구성된다.
+- SFT는 broad instruction-following -> reasoning-intensive targeted training의 **multi-stage SFT**로 구성된다.
 - RL에서는 PTX loss를 함께 사용해 일반 능력 퇴화를 막고, truncated importance sampling, dynamic KL penalty, dynamic minibatch size로 안정성을 높인다.
 
 ## 4-3. Engineering notes
@@ -129,11 +129,11 @@ Kimi Linear는 “linear attention이 정말 full attention의 대체재가 될 
 | Long-context | long-context benchmark average에서 Kimi Linear는 54.5로 MLA 52.2, GDN-H 51.2보다 높았다. 특히 RULER 84.3, MRCR 29.6, HELMET-ICL 90.0, RepoQA 68.5가 눈에 띈다. |
 | Efficiency | MLA 대비 512K prefill에서 2.3배, 1M prefill에서 2.9배 빠르고, 1M decoding에서는 최대 6배(figure 기준 6.3x TPOT) 속도 향상을 보인다. |
 
-추가로 scaling law 실험에서는 Kimi Linear가 compute-optimal MLA baseline 대비 약 **1.16× computational efficiency**를 보였다고 보고한다. 이 수치는 “같은 FLOPs 예산에서 어느 쪽이 더 빨리 좋은 loss로 가는가”라는 관점에서 꽤 중요하다.
+추가로 scaling law 실험에서는 Kimi Linear가 compute-optimal MLA baseline 대비 약 **1.16× computational efficiency**를 보였다고 보고한다. 이 수치는 "같은 FLOPs 예산에서 어느 쪽이 더 빨리 좋은 loss로 가는가"라는 관점에서 꽤 중요하다.
 
 ## 5-2. What really matters in the experiments
 - 가장 중요한 포인트는 **single benchmark win이 아니라 matched recipe**다. 1.4T 토큰, 같은 parameter budget, 같은 training setup 위에서 MLA / GDN-H / Kimi Linear를 비교했다는 점이 이 논문의 설득력을 만든다.
-- 둘째, 이 논문은 “pure linear attention이 full attention을 이겼다”를 보여주지 않는다. 실제로 이기는 구성은 **3:1 hybrid stack**이다. 이 점을 놓치면 논문 해석이 과장된다.
+- 둘째, 이 논문은 "pure linear attention이 full attention을 이겼다"를 보여주지 않는다. 실제로 이기는 구성은 **3:1 hybrid stack**이다. 이 점을 놓치면 논문 해석이 과장된다.
 - 셋째, long-context 성능은 KDA 하나만의 승리라기보다 **KDA + NoPE + periodic full attention**의 조합 효과로 읽는 편이 맞다.
 - 넷째, efficiency 이득은 짧은 context에서는 상대적으로 작고, **128K 이상, 특히 512K~1M decoding 영역**에서 훨씬 강해진다. 즉 이 모델의 진짜 타깃은 short prompt chatbot보다 long-context / decode-heavy workload다.
 - 다섯째, synthetic task 결과는 생각보다 중요하다. Palindrome, MQAR, Stack 같은 테스트에서 KDA가 GDN보다 더 안정적으로 길이를 늘려가며 버틴다는 것은, 이 논문이 주장하는 fine-grained memory control이 단순 마케팅 문구만은 아니라는 근거가 된다.
@@ -141,7 +141,7 @@ Kimi Linear는 “linear attention이 정말 full attention의 대체재가 될 
 # 6. Limitations
 
 1. **이 논문은 pure linear attention의 승리를 증명한 것이 아니다.** 저자 스스로 pure linear attention의 long-context retrieval bottleneck을 인정하고, 그래서 periodic full attention을 남겨 둔다.
-2. **모든 벤치마크에서 일방적으로 이기는 것은 아니다.** EvalPlus, LiveBench, MATH500 같은 예외가 존재하므로 “모든 영역에서 압도”라고 요약하면 과장이다.
+2. **모든 벤치마크에서 일방적으로 이기는 것은 아니다.** EvalPlus, LiveBench, MATH500 같은 예외가 존재하므로 "모든 영역에서 압도"라고 요약하면 과장이다.
 3. **1.4T fair-comparison 결과와 5.7T 공개 checkpoint를 섞어 읽으면 안 된다.** 논문의 핵심 비교표는 1.4T 기준이고, 실제 공개 모델은 5.7T까지 확장된 버전이다.
 4. **수식 해석은 한 번 더 검증하는 편이 좋다.** 특히 Section 6.1의 Eq. 11/12는 공개 GitHub issue에서 수학적 불일치 가능성이 지적된 상태다.
 
@@ -150,7 +150,7 @@ Kimi Linear는 “linear attention이 정말 full attention의 대체재가 될 
 ## 7-1. Why this matters for my work
 - 이 논문이 주는 가장 큰 교훈은 **token mixer를 단독 모듈로 평가하면 안 된다**는 점이다.
 - 실제 서비스에서 중요한 것은 attention rule 하나가 아니라, KV cache, position handling, layer layout, kernel path, decoding throughput이 같이 어떻게 묶이는가이다.
-- 그런 의미에서 Kimi Linear는 “새 attention 수식”보다 **serving-aware architecture recipe**로 보는 편이 실무적으로 더 가치가 크다.
+- 그런 의미에서 Kimi Linear는 "새 attention 수식"보다 **serving-aware architecture recipe**로 보는 편이 실무적으로 더 가치가 크다.
 
 ## 7-2. Reuse potential
 - 가장 재사용 가치가 큰 것은 3가지다.
@@ -168,4 +168,4 @@ Kimi Linear는 “linear attention이 정말 full attention의 대체재가 될 
 - KDA의 본질적 차별점은 **channel-wise forgetting**과 **specialized chunkwise algorithm**이다.
 - 논문은 같은 1.4T recipe 위에서 MLA, GDN-H와 비교해 short-context / long-context / RL 구간에서 전반적으로 더 좋은 결과를 보여준다.
 - 실제 효율 이득은 특히 **long-context decoding**에서 크며, 1M context에서 최대 6배 수준의 decoding throughput 향상을 보고한다.
-- 이 논문은 “linear attention이 드디어 이겼다”보다, **full attention을 대체하려면 아키텍처를 full-stack으로 다시 설계해야 한다**는 사례로 읽는 편이 더 정확하다.
+- 이 논문은 "linear attention이 드디어 이겼다"보다, **full attention을 대체하려면 아키텍처를 full-stack으로 다시 설계해야 한다**는 사례로 읽는 편이 더 정확하다.

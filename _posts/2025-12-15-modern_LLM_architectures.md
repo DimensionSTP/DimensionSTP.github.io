@@ -13,7 +13,7 @@ typora-root-url: ../
 
 # 0. Introduction
 
-최근 LLM 아키텍처는 2017년의 초기 Transformer(Attention Is All You Need)의 **Encoder–Decoder** 뼈대 위에, **깊은 학습의 안정성**, **추론 효율성**, 그리고 **극단적인 용량 확장**이라는 목표를 중심으로 미세 튜닝된 형태이다. GPT-2 이후 대부분의 LLM이 **Decoder-only** 구조를 표준으로 삼았다.
+최근 LLM 아키텍처는 2017년의 초기 Transformer(Attention Is All You Need)의 **Encoder-Decoder** 뼈대 위에, **깊은 학습의 안정성**, **추론 효율성**, 그리고 **극단적인 용량 확장**이라는 목표를 중심으로 미세 튜닝된 형태이다. GPT-2 이후 대부분의 LLM이 **Decoder-only** 구조를 표준으로 삼았다.
 
 이 과정에서 트랜스포머는 텍스트(LLM)와 이미지(ViT)라는 이질적인 두 도메인에서 완전히 다른 **구조적 선택**을 하며 분화되었다. 특히 LLM은 **Pre-LayerNorm, RMSNorm, RoPE, MoE** 조합으로 발전하며 속도와 용량을 극대화한 반면, ViT는 **LayerNorm, Bias=True, GeLU** 조합으로 픽셀 기반의 통계적 불안정성(Mean-shift, Covariance-shift)을 잡는 데 주력했다.
 

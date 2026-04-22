@@ -15,16 +15,16 @@ typora-root-url: ../
 
 [Paper link](https://openreview.net/forum?id=r8H7xhYPwz)
 
-Gated Delta Networks는 제목만 보면 “Mamba2를 조금 개선한 후속작”처럼 보이지만, 실제로는 **memory management를 어떻게 할 것인가**에 대한 꽤 좋은 설계 논문이다. 이 논문이 흥미로운 이유는 단순히 새 recurrence 하나를 제안한 데 있지 않다. 저자들은 **Mamba2의 gating이 잘하는 일**과 **DeltaNet의 delta rule이 잘하는 일**이 서로 다르다고 보고, 두 메커니즘을 하나의 update rule 안에서 결합한다. 그리고 거기서 끝나지 않고, 그 결합이 실제로 GPU-friendly하게 학습될 수 있도록 **chunkwise parallel algorithm**까지 같이 제시한다.
+Gated Delta Networks는 제목만 보면 "Mamba2를 조금 개선한 후속작"처럼 보이지만, 실제로는 **memory management를 어떻게 할 것인가**에 대한 꽤 좋은 설계 논문이다. 이 논문이 흥미로운 이유는 단순히 새 recurrence 하나를 제안한 데 있지 않다. 저자들은 **Mamba2의 gating이 잘하는 일**과 **DeltaNet의 delta rule이 잘하는 일**이 서로 다르다고 보고, 두 메커니즘을 하나의 update rule 안에서 결합한다. 그리고 거기서 끝나지 않고, 그 결합이 실제로 GPU-friendly하게 학습될 수 있도록 **chunkwise parallel algorithm**까지 같이 제시한다.
 
 최근 efficient mixer 계열을 읽다 보면 결국 같은 질문으로 돌아오게 된다.  
-“무엇을 오래 기억하게 할 것인가?”  
-“무엇을 빨리 지울 것인가?”  
-“그 선택을 hardware-efficient하게 구현할 수 있는가?”  
+"무엇을 오래 기억하게 할 것인가?"  
+"무엇을 빨리 지울 것인가?"  
+"그 선택을 hardware-efficient하게 구현할 수 있는가?"  
 
 이 논문은 그 질문들에 대해 꽤 명확한 답을 준다. 특히 Mamba2, DeltaNet, Kimi Linear, Qwen3.5 같은 흐름을 같이 보고 있다면, Gated DeltaNet은 그 사이를 이어주는 좋은 기준점이다.
 
-> 한 줄 요약: Gated DeltaNet은 Mamba2의 selective forgetting과 DeltaNet의 targeted memory update를 결합한 **gated delta rule**을 제안하고, 이를 chunkwise 병렬 학습과 hybrid architecture까지 확장해 **retrieval·memorization·long-context**를 동시에 개선하려는 ICLR 2025 논문이다.
+> 한 줄 요약: Gated DeltaNet은 Mamba2의 selective forgetting과 DeltaNet의 targeted memory update를 결합한 **gated delta rule**을 제안하고, 이를 chunkwise 병렬 학습과 hybrid architecture까지 확장해 **retrieval*memorization*long-context**를 동시에 개선하려는 ICLR 2025 논문이다.
 
 이 논문을 지금 볼 가치가 있는 이유는 다음과 같음.
 
@@ -32,7 +32,7 @@ Gated Delta Networks는 제목만 보면 “Mamba2를 조금 개선한 후속작
 - S-NIAH case study가 좋아서, gating과 delta rule의 역할 분담을 실험적으로 이해하기 쉽다.
 - pure recurrent 설계에서 끝나지 않고, **hybrid model(H1/H2)** 과 **chunkwise training algorithm**까지 이어져서 실무적으로도 읽을 가치가 있다.
 
-내가 보기엔 이 논문의 핵심은 “Mamba2보다 조금 더 잘 나온 recurrent block”이 아니다.  
+내가 보기엔 이 논문의 핵심은 "Mamba2보다 조금 더 잘 나온 recurrent block"이 아니다.  
 오히려 **fixed-state recurrent model이 retrieval과 memorization 사이에서 왜 흔들리는지**, 그리고 그 균형을 어떤 update rule로 맞출 수 있는지를 보여주는 논문에 가깝다.
 
 # 1. Problem Setting
@@ -46,7 +46,7 @@ Gated Delta Networks는 제목만 보면 “Mamba2를 조금 개선한 후속작
 - 문제는 이 둘이 잘하는 일이 다르다는 점이다.
   - gating은 **빠른 memory clearing**에는 좋지만, 지나친 decay는 **장기 기억 유지**를 해칠 수 있다.
   - delta rule은 **정밀한 associative update**에는 좋지만, robust한 forgetting이 없으면 **state saturation**과 **memory collision**이 생기기 쉽다.
-- 따라서 이 논문의 목표는 “더 빠른 linear model”이 아니라, **forgetting과 targeted overwrite를 동시에 갖는 update rule**을 만들고, 그 rule을 실제 hardware-friendly training path 위에 올리는 것이다.
+- 따라서 이 논문의 목표는 "더 빠른 linear model"이 아니라, **forgetting과 targeted overwrite를 동시에 갖는 update rule**을 만들고, 그 rule을 실제 hardware-friendly training path 위에 올리는 것이다.
 
 ## 1-2. Why previous approaches are insufficient
 
@@ -90,7 +90,7 @@ Gated Delta Networks는 제목만 보면 “Mamba2를 조금 개선한 후속작
 - **Delta rule helps memorization**  
   복잡한 value pattern을 저장하고 되살리는 능력은 delta rule 쪽이 더 낫다.
 
-내가 보기엔 이 paper의 핵심은 “둘을 섞었다”가 아니라,  
+내가 보기엔 이 paper의 핵심은 "둘을 섞었다"가 아니라,  
 **forgetting과 overwrite가 서로 다른 failure mode를 고친다**는 점을 분리해서 보여준 데 있다.
 
 # 3. Architecture / Method
@@ -143,14 +143,14 @@ Fig. 1과 공식 구현을 같이 보면 block design은 비교적 명확하다.
 - short convolution으로 local mixing을 조금 보완하고
 - output gate를 둬서 recurrence 출력을 그대로 내보내지 않고 한 번 더 조절한다
 
-즉 Gated DeltaNet은 단지 “state update 식”만 새로운 모델이 아니라, **projection / local mixing / normalization / gating을 한 묶음으로 설계한 token mixer**다.
+즉 Gated DeltaNet은 단지 "state update 식"만 새로운 모델이 아니라, **projection / local mixing / normalization / gating을 한 묶음으로 설계한 token mixer**다.
 
 ### 3) Hardware-efficient chunkwise training
 
 - recurrent form은 이론적으로 선형이더라도, 실제 GPU에서 빠르게 돌리려면 **scan-friendly recurrence를 matmul-heavy chunkwise form으로 바꾸는 과정**이 필요하다.
 - 논문은 DeltaNet의 병렬화 아이디어를 가져와, gating이 들어간 경우에도 recurrence를 chunk 단위로 부분 전개하고 matrix form으로 다시 쓴다.
 - 여기서 핵심 메시지는 수식 자체보다도, **좋은 update rule은 좋은 병렬화 전략과 같이 설계되어야 한다**는 점이다.
-- 이 논문이 설득력 있는 이유는 “메모리 업데이트 아이디어”와 “현대 하드웨어에서의 실제 학습 경로”를 분리하지 않았기 때문이다.
+- 이 논문이 설득력 있는 이유는 "메모리 업데이트 아이디어"와 "현대 하드웨어에서의 실제 학습 경로"를 분리하지 않았기 때문이다.
 
 ### 4) Hybrid models: H1 / H2
 
@@ -159,8 +159,8 @@ Fig. 1과 공식 구현을 같이 보면 block design은 비교적 명확하다.
   - **Gated DeltaNet-H1**: Gated DeltaNet + sliding window attention
   - **Gated DeltaNet-H2**: Mamba2 + Gated DeltaNet + sliding window attention
 - 이 hybrid는 retrieval, local comparison, local shift modeling을 recurrent state 하나에 전부 맡기지 않고, attention branch를 부분적으로 섞어 부담을 분산한다.
-- Appendix 기준 hybrid ablation에서는 **Mamba2 → Gated DeltaNet → SWA** 순서가 가장 좋은 결과를 보였다.  
-  이 점은 꽤 중요하다. hybrid는 “뭘 섞느냐” 못지않게 **어떤 순서로 섞느냐**도 성능에 영향을 준다는 뜻이기 때문이다.
+- Appendix 기준 hybrid ablation에서는 **Mamba2 -> Gated DeltaNet -> SWA** 순서가 가장 좋은 결과를 보였다.  
+  이 점은 꽤 중요하다. hybrid는 "뭘 섞느냐" 못지않게 **어떤 순서로 섞느냐**도 성능에 영향을 준다는 뜻이기 때문이다.
 
 # 4. Training / Data / Recipe
 
@@ -170,7 +170,7 @@ Fig. 1과 공식 구현을 같이 보면 block design은 비교적 명확하다.
 - 데이터는 **FineWeb-Edu**에서 샘플링한 100B tokens다.
 - 모든 모델은 **Llama2 tokenizer**를 사용하며, vocabulary size는 32,000이다.
 - Appendix의 block ablation은 **400M parameter / 15B tokens** 설정에서 진행된다.
-- 즉 이 논문은 “우리 모델이 더 좋다”를 말할 때, 최소한 **학습 데이터량과 파라미터 규모를 맞춘 controlled comparison**을 의식하고 있다.
+- 즉 이 논문은 "우리 모델이 더 좋다"를 말할 때, 최소한 **학습 데이터량과 파라미터 규모를 맞춘 controlled comparison**을 의식하고 있다.
 
 ## 4-2. Training strategy
 
@@ -193,7 +193,7 @@ Mamba, Mamba2, DeltaNet, RetNet, HGRN2, Samba까지 같이 놓고 비교할 때 
 - README 수준에서 봐도 `q_proj`, `k_proj`, `v_proj`, `a_proj`, `b_proj`, depthwise short convolution, output gate(`g_proj`), output norm, output projection이 드러난다.
 - 즉 이 논문은 **paper figure와 실제 code path가 꽤 가깝게 대응되는 편**이다.
 - 또 README는 추가 기능(예: varlen training / inference support)은 FLA 구현을 참고하라고 안내한다.  
-  실무 관점에서 보면, 이런 부분은 “아이디어 제안”을 넘어 **실제 kernel ecosystem과 연결되는가**를 가늠할 수 있는 단서다.
+  실무 관점에서 보면, 이런 부분은 "아이디어 제안"을 넘어 **실제 kernel ecosystem과 연결되는가**를 가늠할 수 있는 단서다.
 
 # 5. Evaluation
 
@@ -233,7 +233,7 @@ Mamba, Mamba2, DeltaNet, RetNet, HGRN2, Samba까지 같이 놓고 비교할 때 
   - 복잡한 value pattern을 기억하고 복원하는 능력은 delta rule이 강하고
   - Gated DeltaNet은 그 장점을 gating과 함께 유지한다
 
-즉 Table 2는 Gated DeltaNet이 “무조건 둘보다 낫다”보다,  
+즉 Table 2는 Gated DeltaNet이 "무조건 둘보다 낫다"보다,  
 **어떤 failure mode를 어떤 메커니즘이 보완하는지**를 보여주는 diagnostic experiment다.
 
 ### 2) Language modeling / commonsense reasoning
@@ -252,7 +252,7 @@ Mamba, Mamba2, DeltaNet, RetNet, HGRN2, Samba까지 같이 놓고 비교할 때 
 - 하지만 hybrid는 여기서 더 크게 뛴다.
   - H1: **39.0**
   - H2: **40.1**
-- 즉 retrieval-heavy task에서는 “좋은 recurrent rule”도 중요하지만, **attention/local modeling을 적절히 섞는 것**이 더 결정적이다.
+- 즉 retrieval-heavy task에서는 "좋은 recurrent rule"도 중요하지만, **attention/local modeling을 적절히 섞는 것**이 더 결정적이다.
 
 ### 2) LongBench에서도 recurrent보다 hybrid가 더 강하다
 
@@ -266,7 +266,7 @@ Mamba, Mamba2, DeltaNet, RetNet, HGRN2, Samba까지 같이 놓고 비교할 때 
 - 하지만 최종 메시지는 역시 같다.  
   **pure recurrent 개선은 분명 의미 있지만, 최종 승자는 hybrid 쪽**이다.
 
-### 3) Throughput 결과는 “거의 공짜는 아니지만 꽤 괜찮다”
+### 3) Throughput 결과는 "거의 공짜는 아니지만 꽤 괜찮다"
 
 - Fig. 3 해석에 따르면 Gated DeltaNet은 **DeltaNet과 essentially 같은 throughput**을 달성하고, Mamba2보다는 약간 느리다.
 - 저자들은 그 차이를 **더 expressive한 transition matrix** 때문이라고 설명한다.
@@ -274,12 +274,12 @@ Mamba, Mamba2, DeltaNet, RetNet, HGRN2, Samba까지 같이 놓고 비교할 때 
 - 특히 논문은 **Gated DeltaNet-H1이 짧은 sequence에서도 설득력 있는 training throughput**을 유지한다고 본다.
 
 내가 보기엔 이 throughput 결과도 꽤 중요하다.  
-좋은 recurrence를 제안했는데 실제 kernel path가 너무 무거우면 의미가 반감된다. 이 논문은 최소한 **“좋아졌는데 너무 느려졌다”는 비판은 피한다**는 점에서 설계가 균형적이다.
+좋은 recurrence를 제안했는데 실제 kernel path가 너무 무거우면 의미가 반감된다. 이 논문은 최소한 **"좋아졌는데 너무 느려졌다"는 비판은 피한다**는 점에서 설계가 균형적이다.
 
 # 6. Limitations
 
 1. **pure recurrent의 한계는 여전히 남아 있다**  
-   Gated DeltaNet이 Mamba2와 DeltaNet을 recurrent setting에서 개선하는 것은 맞지만, retrieval과 long-context 전체 관점에서는 H1/H2 같은 hybrid가 더 강하다. 즉 이 논문의 결론은 “attention은 필요 없다”가 아니다.
+   Gated DeltaNet이 Mamba2와 DeltaNet을 recurrent setting에서 개선하는 것은 맞지만, retrieval과 long-context 전체 관점에서는 H1/H2 같은 hybrid가 더 강하다. 즉 이 논문의 결론은 "attention은 필요 없다"가 아니다.
 
 2. **실제 retrieval gap의 일부는 update rule 바깥 문제일 수 있다**  
    논문도 real-world retrieval에서 improvement margin이 synthetic task보다 작다고 설명한다. instruction-unaligned small LM의 repetition error가 주요 원인이라면, update rule만으로 해결되지 않는 오차가 섞여 있다는 뜻이다.
@@ -287,7 +287,7 @@ Mamba, Mamba2, DeltaNet, RetNet, HGRN2, Samba까지 같이 놓고 비교할 때 
 3. **스케일 해석에는 주의가 필요하다**  
    주 실험은 1.3B / 100B, ablation은 400M / 15B 설정이다. 결과는 충분히 의미 있지만, 이를 그대로 10B~100B class LLM의 최종 거동으로 일반화하는 것은 조심해야 한다. 원문에서 더 큰 scale 실험은 제공하지 않는다.
 
-4. **시스템적 우위도 “공짜”는 아니다**  
+4. **시스템적 우위도 "공짜"는 아니다**  
    Gated DeltaNet은 DeltaNet 대비 marginal overhead 수준이라고 하지만, Mamba2보다 완전히 빠른 것은 아니다. transition matrix 표현력이 좋아진 만큼 약간의 비용은 감수한다.
 
 # 7. My Take
@@ -295,14 +295,14 @@ Mamba, Mamba2, DeltaNet, RetNet, HGRN2, Samba까지 같이 놓고 비교할 때 
 ## 7-1. Why this matters for my work
 
 - 이 논문은 efficient token mixer를 볼 때 좋은 해석 틀을 준다.
-- 앞으로 비슷한 구조를 볼 때 “attention이냐 Mamba냐”보다
+- 앞으로 비슷한 구조를 볼 때 "attention이냐 Mamba냐"보다
   - 얼마나 잘 잊는가
   - 얼마나 잘 덮어쓰는가
   - retrieval burden을 어디서 처리하는가
   - 그걸 어떤 병렬화 경로로 학습하는가
   로 분해해서 보게 만든다.
 - 특히 long-context, in-context retrieval, agentic loop 같은 workload를 생각하면, **memory clearing과 targeted overwrite를 따로 설계해야 한다**는 메시지는 꽤 실무적이다.
-- 최근 Kimi Linear나 Qwen3.5 같은 후속 구조를 볼 때도, Gated DeltaNet을 먼저 읽어 두면 “왜 finer-grained gating이나 hybrid layout이 또 나왔는가”가 훨씬 잘 보인다.
+- 최근 Kimi Linear나 Qwen3.5 같은 후속 구조를 볼 때도, Gated DeltaNet을 먼저 읽어 두면 "왜 finer-grained gating이나 hybrid layout이 또 나왔는가"가 훨씬 잘 보인다.
 
 ## 7-2. Reuse potential
 
@@ -327,5 +327,5 @@ Mamba, Mamba2, DeltaNet, RetNet, HGRN2, Samba까지 같이 놓고 비교할 때 
 - Gated DeltaNet은 Mamba2의 gating과 DeltaNet의 delta rule이 서로 보완적이라는 관찰에서 출발한다.
 - 핵심은 **forgetting(α)** 과 **targeted overwrite(β)** 를 하나의 update rule 안에서 동시에 다루는 것이다.
 - S-NIAH 실험은 이 조합이 왜 필요한지 가장 잘 보여주며, retention / filtering / memorization의 trade-off를 분해해서 해석하게 만든다.
-- 하지만 최종 empirical message는 “pure recurrent의 완전한 승리”가 아니라, **좋은 recurrent rule + hybrid layout** 이 현실적이라는 쪽에 가깝다.
+- 하지만 최종 empirical message는 "pure recurrent의 완전한 승리"가 아니라, **좋은 recurrent rule + hybrid layout** 이 현실적이라는 쪽에 가깝다.
 - 따라서 이 논문은 Mamba2의 minor improvement라기보다, 이후 hybrid efficient mixer들을 읽기 위한 **핵심 기준 논문**으로 보는 편이 맞다.

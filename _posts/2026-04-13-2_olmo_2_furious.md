@@ -15,11 +15,11 @@ typora-root-url: ../
 
 [Paper link](https://arxiv.org/abs/2501.00656)
 
-2 OLMo 2 Furious는 “좋은 open model을 만들었다”는 수준에서 읽으면 안되는 논문이다. 이 논문의 진짜 가치는 **현대 open LLM을 어떻게 안정적으로 학습시키고, 어떤 데이터 커리큘럼으로 능력을 끌어올리고, 어떤 post-training loop로 assistant 성격을 붙이는가**를 꽤 정직하게 공개했다는 데 있다.
+2 OLMo 2 Furious는 "좋은 open model을 만들었다"는 수준에서 읽으면 안되는 논문이다. 이 논문의 진짜 가치는 **현대 open LLM을 어떻게 안정적으로 학습시키고, 어떤 데이터 커리큘럼으로 능력을 끌어올리고, 어떤 post-training loop로 assistant 성격을 붙이는가**를 꽤 정직하게 공개했다는 데 있다.
 
 특히 요즘은 open-weight 모델이 많아졌지만, 여전히 많은 경우에 공개되는 것은 **최종 체크포인트**이지 **만드는 과정**은 아니다. 그런데 실제 연구나 실무에서 재사용 가치가 높은 것은 결과물 그 자체보다도, 어떤 실패를 겪었고 어떤 선택이 왜 유효했는가를 보여주는 recipe다. OLMo 2는 그 점에서 모델 소개 논문이라기보다 **foundation LLM full-stack recipe report**에 가깝다.
 
-> 한 줄 요약: OLMo 2는 안정성 중심의 Transformer 수정, 두 단계 base training, Dolmino Mix 1124 기반 late-stage curriculum, Tulu 3식 SFT → DPO → RLVR post-training을 하나의 재현 가능한 fully-open recipe로 묶은 논문이다.
+> 한 줄 요약: OLMo 2는 안정성 중심의 Transformer 수정, 두 단계 base training, Dolmino Mix 1124 기반 late-stage curriculum, Tulu 3식 SFT -> DPO -> RLVR post-training을 하나의 재현 가능한 fully-open recipe로 묶은 논문이다.
 
 이 논문을 지금 볼 가치가 있는 이유는 다음과 같음.
 
@@ -27,7 +27,7 @@ typora-root-url: ../
 - 이 논문은 base model, data mix, training code, eval suite, training logs까지 함께 공개해서 **어떻게 만들었는가**를 따라가기 좋다.
 - 특히 foundation LLM을 만들 때 중요한 **pretrain / mid-train / post-train의 역할 분리**가 아주 선명하게 드러난다.
 
-내가 보기엔 이 논문은 “OLMo 2가 잘한다”보다, **현대 LLM recipe는 결국 stage design의 문제**라는 사실을 잘 보여준다. broad coverage를 위한 pretraining, capability patching을 위한 mid-training, assistant behavior를 위한 post-training이 뒤섞이면 설명도 재현도 어려워지는데, OLMo 2는 그 경계를 꽤 잘 나눠서 보여준다.
+내가 보기엔 이 논문은 "OLMo 2가 잘한다"보다, **현대 LLM recipe는 결국 stage design의 문제**라는 사실을 잘 보여준다. broad coverage를 위한 pretraining, capability patching을 위한 mid-training, assistant behavior를 위한 post-training이 뒤섞이면 설명도 재현도 어려워지는데, OLMo 2는 그 경계를 꽤 잘 나눠서 보여준다.
 
 # 1. Problem Setting
 
@@ -35,8 +35,8 @@ typora-root-url: ../
 
 - 이 논문이 겨냥하는 핵심 문제는 **fully open language model이 강한 성능과 재현성을 동시에 달성하기 어렵다**는 점이다.
 - open ecosystem에는 이미 많은 open-weight 모델이 있지만, 실제 연구 관점에서 중요한 데이터, 코드, 중간 체크포인트, 실험 로그까지 모두 공개하는 경우는 드물다.
-- 또 base model 개발은 단순히 “더 많은 토큰을 학습시킨다”로 끝나지 않는다. **학습 안정성**, **per-token efficiency**, **late-stage capability shaping**, **post-training controllability**를 동시에 다뤄야 한다.
-- 즉 이 논문의 문제 설정은 “좋은 open model 하나 만들기”가 아니라, **성능이 충분히 강하면서도 fully-open한 end-to-end recipe를 설계하는 것**에 가깝다.
+- 또 base model 개발은 단순히 "더 많은 토큰을 학습시킨다"로 끝나지 않는다. **학습 안정성**, **per-token efficiency**, **late-stage capability shaping**, **post-training controllability**를 동시에 다뤄야 한다.
+- 즉 이 논문의 문제 설정은 "좋은 open model 하나 만들기"가 아니라, **성능이 충분히 강하면서도 fully-open한 end-to-end recipe를 설계하는 것**에 가깝다.
 
 ## 1-2. Why previous approaches are insufficient
 
@@ -54,7 +54,7 @@ typora-root-url: ../
 - 첫째, base Transformer에 안정성 중심의 수정들을 넣는다. RMSNorm, reordered norm, QK-norm, z-loss, 더 큰 RoPE θ, tokenizer 변경이 여기에 해당한다.
 - 둘째, base training을 **pretraining + mid-training**의 두 단계로 나눈다. pretraining은 broad coverage를 맡고, mid-training은 high-quality text와 math/STEM capability patching을 맡는다.
 - 셋째, mid-training을 단순 추가 학습으로 보지 않고, **Dolmino Mix 1124라는 late-stage curriculum**으로 설계한다.
-- 넷째, instruct model은 Tulu 3 recipe를 기반으로 **SFT → DPO → RLVR**의 stage-aligned pipeline으로 만든다.
+- 넷째, instruct model은 Tulu 3 recipe를 기반으로 **SFT -> DPO -> RLVR**의 stage-aligned pipeline으로 만든다.
 - 다섯째, 모델, 데이터, 코드, eval, logs를 함께 공개해 **결과보다 과정이 더 중요한 논문**으로 만든다.
 
 ## 2-2. Design intuition
@@ -64,7 +64,7 @@ typora-root-url: ../
 - 남은 capability gap, 특히 math나 고품질 reference exposure는 mid-training에서 보강하고,
 - 실제 assistant behavior는 post-training에서 shaping해야 한다.
 - 즉, 모든 문제를 한 stage에서 해결하려는 대신, **각 stage가 맡아야 할 역할을 분리하는 것**이 이 논문의 핵심이다.
-- 그래서 OLMo 2를 “새 모델”로 보기보다, **stage-separated foundation LLM construction manual**로 읽는 편이 더 낫다.
+- 그래서 OLMo 2를 "새 모델"로 보기보다, **stage-separated foundation LLM construction manual**로 읽는 편이 더 낫다.
 
 # 3. Architecture / Method
 
@@ -82,7 +82,7 @@ typora-root-url: ../
 ### 1) Stability-oriented Transformer updates
 
 - OLMo 2는 decoder-only Transformer를 유지한다.
-- 다만 핵심은 “Transformer를 바꿨다”가 아니라 **학습이 덜 흔들리게 만드는 세부 수정들**을 넣었다는 점이다.
+- 다만 핵심은 "Transformer를 바꿨다"가 아니라 **학습이 덜 흔들리게 만드는 세부 수정들**을 넣었다는 점이다.
 - 주요 변경점은 다음과 같다.
   - nonparametric LayerNorm 대신 RMSNorm 사용
   - attention/MLP 입력이 아니라 출력 쪽을 정규화하는 reordered norm
@@ -111,12 +111,12 @@ typora-root-url: ../
 - OLMo 2에서 꽤 실용적인 포인트는 mid-training을 여러 번 돌리고 평균 내는 **checkpoint soup** 전략이다.
 - 7B는 50B-token mid-training run 3개를 평균하고,
 - 13B와 32B는 100B-token run 3개와 300B-token run 1개를 평균한다.
-- 이 전략은 “어떤 단일 seed가 잘 나오길 바란다”보다, **고품질 anneal을 여러 번 하고 합쳐서 더 좋은 local minimum을 찾는다**는 관점에 가깝다.
+- 이 전략은 "어떤 단일 seed가 잘 나오길 바란다"보다, **고품질 anneal을 여러 번 하고 합쳐서 더 좋은 local minimum을 찾는다**는 관점에 가깝다.
 
 ### 5) Tulu 3-aligned post-training pipeline
 
 - instruct 모델은 Tulu 3 recipe를 거의 그대로 계승하되, permissive license와 OLMo 2 특성에 맞게 조정한다.
-- pipeline은 SFT → DPO → RLVR의 3단계다.
+- pipeline은 SFT -> DPO -> RLVR의 3단계다.
 - SFT는 broad assistant prior,
 - DPO는 preference shaping,
 - RLVR는 correctness를 검증할 수 있는 영역, 특히 수학과 제약 추종을 밀어주는 역할을 맡는다.
@@ -128,7 +128,7 @@ typora-root-url: ../
 
 - pretraining data인 **OLMo 2 Mix 1124**는 약 3.9T tokens 규모다.
 - 구성은 DCLM 기반 web text가 대부분이고, 여기에 StarCoder code, peS2o academic papers, arXiv STEM papers, OpenWebMath, Algebraic Stack, Wikipedia/Wikibooks 등이 섞인다.
-- 논문에서 특히 흥미로운 점은, pretraining mix가 단순히 “인터넷을 크게 긁어온 데이터”가 아니라 **web + code + academic + math reference**를 의도적으로 섞은 구조라는 점이다.
+- 논문에서 특히 흥미로운 점은, pretraining mix가 단순히 "인터넷을 크게 긁어온 데이터"가 아니라 **web + code + academic + math reference**를 의도적으로 섞은 구조라는 점이다.
 
 - mid-training data인 **Dolmino Mix 1124**는 훨씬 더 공격적으로 설계된다.
 - high-quality subset 쪽에는 다음이 들어간다.
@@ -158,7 +158,7 @@ typora-root-url: ../
 
 - warmup은 공통적으로 2000 steps다.
 - peak learning rate와 cosine schedule 길이는 scale마다 다르게 잡는다.
-- 이 부분에서 내가 흥미롭게 본 점은, 논문이 “어떤 LR이 정답이다”를 과장하지 않고, 오히려 **상당히 넓은 plateau 안에서 안정적으로 잘 학습되는 설정을 찾는 것**에 초점을 둔다는 점이다.
+- 이 부분에서 내가 흥미롭게 본 점은, 논문이 "어떤 LR이 정답이다"를 과장하지 않고, 오히려 **상당히 넓은 plateau 안에서 안정적으로 잘 학습되는 설정을 찾는 것**에 초점을 둔다는 점이다.
 
 - mid-training은 OLMo 2의 진짜 하이라이트다.
 - 저자들은 high-quality source와 math source를 무작정 넣지 않고, **microanneal**이라는 작은 annealing 실험으로 각각의 데이터 품질을 싸게 평가한다.
@@ -166,19 +166,19 @@ typora-root-url: ../
   - domain-specific data는 많지 않아도 도움이 된다.
   - 고품질 domain data는 약간의 duplication만으로도 추가 이득을 줄 수 있다.
   - code 스타일로 쓰인 math 데이터를 자연어 풀이 스타일로 rewriting하면 성능이 크게 좋아질 수 있다.
-- 즉, 중요한 건 “math 데이터를 더 모으자”가 아니라, **모델이 먹기 쉬운 형태로 다시 써주는 것**이다.
+- 즉, 중요한 건 "math 데이터를 더 모으자"가 아니라, **모델이 먹기 쉬운 형태로 다시 써주는 것**이다.
 
 - checkpoint soup도 중요한 training 전략이다.
 - 7B는 50B mid-training run 3개 평균,
 - 13B와 32B는 100B run 3개 + 300B run 1개 평균을 사용한다.
 - 이건 연구 관점에서도 흥미롭다. 좋은 late-stage data mix를 찾은 뒤에는, **한 번 더 긴 학습을 하는 것만큼이나 여러 anneal을 평균내는 것이 중요할 수 있다**는 뜻이기 때문이다.
 
-- post-training은 SFT → DPO → RLVR 순으로 진행된다.
+- post-training은 SFT -> DPO -> RLVR 순으로 진행된다.
 - SFT mix는 약 939K prompts 규모다.
 - DPO는 on-policy synthetic preference를 포함하고,
 - 7B / 13B는 PPO 기반 RLVR, 1B / 32B는 GRPO 기반 RLVR을 적용한다.
 - RLVR는 한 번으로 끝나지 않고, 13B의 경우 GSM8K와 MATH 쪽 성능을 보면서 추가 stage를 더 밟는다.
-- 이 점이 중요하다. RL을 “마지막 만능 비법”처럼 쓰지 않고, **특정 capability gap을 메우는 targeted stage**로 쓴다.
+- 이 점이 중요하다. RL을 "마지막 만능 비법"처럼 쓰지 않고, **특정 capability gap을 메우는 targeted stage**로 쓴다.
 
 ## 4-3. Engineering notes
 
@@ -189,7 +189,7 @@ typora-root-url: ../
 
 - evaluation hygiene도 좋다.
 - 저자들은 development benchmark와 held-out benchmark를 분리해서, recipe가 개발셋 과적합인지 아닌지를 따로 본다.
-- 완전한 contamination-free를 보장하는 건 아니더라도, 적어도 “우리는 어떤 평가를 보면서 개발했는가”를 명시하는 태도는 다른 open model technical report보다 낫다.
+- 완전한 contamination-free를 보장하는 건 아니더라도, 적어도 "우리는 어떤 평가를 보면서 개발했는가"를 명시하는 태도는 다른 open model technical report보다 낫다.
 
 - 마지막으로 infrastructure 섹션도 무시하기 어렵다.
 - Jupiter / Augusta 클러스터, Beaker workload system, GPU health check, restart / quarantine 정책까지 상세히 쓴다.
@@ -212,7 +212,7 @@ typora-root-url: ../
 - GSM8K, IFEval, MATH 같은 verifiable / structured 영역에서 특히 개선이 크다.
 - 13B Instruct는 peer 8B급 open instruction models를 확실히 넘고, 일부 14B급 모델에 근접하는 성능을 보여준다.
 
-- 내가 보기엔 여기서 중요한 건 “Qwen을 이겼나” 같은 headline보다,
+- 내가 보기엔 여기서 중요한 건 "Qwen을 이겼나" 같은 headline보다,
   1. fully-open 조건에서
   2. base와 instruct 모두
   3. 여러 scale에 걸쳐
@@ -236,7 +236,7 @@ typora-root-url: ../
 1. 이 논문은 매우 많은 개선 요소를 동시에 다루기 때문에, **어떤 요소가 최종 성능에 얼마나 기여했는지 완전히 분리하기 어렵다**. 실무에서는 오히려 이런 논문이 유용하지만, 연구적으로는 attribution이 흐려질 수 있다.
 
 2. fully-open이라고 해서 쉽게 재현 가능한 것은 아니다.  
-   7B조차 4T 이상 토큰, 여러 mid-training run, checkpoint soup, RLVR까지 포함한다. 따라서 이 recipe는 “투명한 recipe”이지 “가벼운 recipe”는 아니다.
+   7B조차 4T 이상 토큰, 여러 mid-training run, checkpoint soup, RLVR까지 포함한다. 따라서 이 recipe는 "투명한 recipe"이지 "가벼운 recipe"는 아니다.
 
 3. mid-training이 math / STEM / high-quality text에 강하게 최적화되어 있기 때문에, 같은 방식이 coding, multilingual, tool use, agent loop 같은 영역에도 그대로 통할지는 추가 검증이 필요하다.
 
@@ -267,7 +267,7 @@ typora-root-url: ../
 - **checkpoint soup**  
   특히 마지막 anneal 단계에서 단일 seed best checkpoint보다 더 실용적일 수 있다.
 - **held-out evaluation 선언**  
-  사내 실험에서도 dev set과 “절대 안 보는 셋”을 분리하는 습관으로 옮기기 좋다.
+  사내 실험에서도 dev set과 "절대 안 보는 셋"을 분리하는 습관으로 옮기기 좋다.
 - **stability-first engineering**  
   repeated n-gram filter, initialization analysis, spike score 같은 아이디어는 대형 학습뿐 아니라 중형 실험에도 적용할 만하다.
 

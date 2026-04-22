@@ -72,7 +72,7 @@ DeepSeek V3.1은 DeepSeek-V3.1-Base를 기반으로 포스트 트레이닝되었
 * **데이터 확장**: V3 베이스 체크포인트 위에 2단계 장문 컨텍스트 확장 방식을 적용했다. 32K 확장 단계는 630B 토큰으로 10배, 128K 확장 단계는 209B 토큰으로 3.3배 확장되었다.
 * **아키텍처 혁신 (DeepSeek V3 기반)**:
   * **Multi-head Latent Attention (MLA)**: 기존 MHA와 달리 LoRA 기반의 경량화된 Q, K, V 행렬을 생성하고, 특히 K와 V를 하나의 projection에서 생성하여 파라미터 효율성과 메모리 사용량을 절감했다.
-  * **MoE 개선**: Auxiliary‑Loss Free Load Balancing과 Bias‑Corrected Top‑k Gating Strategy를 도입하여, 추가적인 손실 함수 없이도 전문가 간 부하를 동적으로 균형 있게 분산시켰다. DeepSeek V3의 MoE 레이어는 1개의 공유 전문가와 256개의 라우팅 전문가로 구성되며, 토큰당 8개의 전문가가 활성화된다.
+  * **MoE 개선**: Auxiliary-Loss Free Load Balancing과 Bias-Corrected Top-k Gating Strategy를 도입하여, 추가적인 손실 함수 없이도 전문가 간 부하를 동적으로 균형 있게 분산시켰다. DeepSeek V3의 MoE 레이어는 1개의 공유 전문가와 256개의 라우팅 전문가로 구성되며, 토큰당 8개의 전문가가 활성화된다.
   * **Multi-Token Prediction (MTP)**: 학습 시 LM Head를 공유하고 Transformer 블록 내에서 재귀적으로 MTP를 적용하는 독자적인 방식을 사용하여 모델 크기 증가 없이 MTP를 활용했다.
 * **혼합 정밀도 (Mixed Precision)**: DeepSeek V3.1은 Nvidia Hopper 아키텍처의 강점을 활용하기 위해 UE8M0 FP8 scale 데이터 형식을 모델 가중치와 활성화에 사용하여 훈련되었다. 이는 FP8의 빠른 연산 속도와 BF16/FP32의 안정성을 동시에 확보하기 위함이다.
 
@@ -94,7 +94,7 @@ Llama Nemotron은 Meta Llama-3.1-405B-Instruct의 파생 모델로, 아키텍처
 | :--- | :--- | :--- | :--- |
 | Qwen3 (Case 2) | 복잡한 논리적 추론, 수학, 코딩 등에서 성능 향상. 추론 과정이 `<think>...</think>` 블록으로 명확히 구분된다. | **모델 결정 위험**: 모델이 `<think>` 토큰을 생성한 뒤, 바로 `</think>`를 생성하여 원치 않게 Non-think 모드가 되어버릴 수 있다. | T=0.6, P=0.95, K=20. 탐욕적 디코딩 금지. |
 | DeepSeek V3.1 (Case 3) | Thinking 모드에서 Non-thinking 모드 대비 크게 높은 성능을 보임 (예: AIME 2024 Pass@1 93.1, LiveCodeBench Pass@1 74.8). 템플릿의 명확한 분리로 모드 전환이 안정적이다. | **학습 효율성 저하 가능성**: 두 모드가 완전히 다른 분포를 가지게 되어 모델 학습 시 sample efficiency가 떨어질 수 있다. | (별도 명시된 파라미터 없음). |
-| Llama Nemotron (Case 1) | 추론 능력이 크게 강화됨 (예: AIME25 Pass@1 16.67% → 72.50%, MATH500 Pass@1 80.40% → 97.00%). | **불필요한 태그 생성**: 추론이 불필요한 경우에도 `<think></think>` 태그가 포함되어 오버헤드가 발생 가능 (예상된 동작). | T=0.6, P=0.95. |
+| Llama Nemotron (Case 1) | 추론 능력이 크게 강화됨 (예: AIME25 Pass@1 16.67% -> 72.50%, MATH500 Pass@1 80.40% -> 97.00%). | **불필요한 태그 생성**: 추론이 불필요한 경우에도 `<think></think>` 태그가 포함되어 오버헤드가 발생 가능 (예상된 동작). | T=0.6, P=0.95. |
 
 ## 3-2. Instruct True Mode
 
