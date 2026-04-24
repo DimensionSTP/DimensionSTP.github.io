@@ -2,12 +2,12 @@ name: Publish scheduled posts
 
 on:
   schedule:
-    # 00:05, 00:20, 00:35, 00:50 KST every day.
-    - cron: "5,20,35,50 15 * * *"
+    # Poll regularly because GitHub scheduled runs can be delayed or skipped.
+    - cron: "5,20,35,50 * * * *"
   workflow_dispatch:
     inputs:
       publish_date:
-        description: "KST publish date to release (YYYY-MM-DD). Defaults to today in Asia/Seoul."
+        description: "Latest KST publish date to release through (YYYY-MM-DD). Defaults to today in Asia/Seoul."
         required: false
         type: string
       dry_run:
@@ -18,7 +18,8 @@ on:
 
 permissions:
   contents: write
-  actions: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: scheduled-post-publisher
@@ -27,6 +28,9 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-22.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -34,11 +38,11 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Cherry-pick today's post commits from dev
+      - name: Cherry-pick due post commits from dev
+        id: publish
         env:
           PUBLISH_DATE: ${{ github.event.inputs.publish_date }}
           DRY_RUN: ${{ github.event.inputs.dry_run }}
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
 
@@ -53,22 +57,50 @@ jobs:
           fi
 
           dry_run="${DRY_RUN:-false}"
+          echo "published=false" >> "$GITHUB_OUTPUT"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch --no-tags origin main:refs/remotes/origin/main dev:refs/remotes/origin/dev
           git checkout -B main origin/main
 
-          mapfile -t commits < <(
-            git log --reverse --format="%H" origin/main..origin/dev -- "_posts/${publish_date}-*.md"
+          mapfile -t candidate_commits < <(
+            git log --reverse --cherry-pick --right-only --format="%H" origin/main...origin/dev -- "_posts/*.md"
           )
 
+          commits=()
+          for commit in "${candidate_commits[@]}"; do
+            has_due_post=false
+            has_future_post=false
+
+            while IFS= read -r path; do
+              if [[ "$path" =~ ^_posts/([0-9]{4}-[0-9]{2}-[0-9]{2})-.+\.md$ ]]; then
+                post_date="${BASH_REMATCH[1]}"
+                if [[ "$post_date" > "$publish_date" ]]; then
+                  has_future_post=true
+                else
+                  has_due_post=true
+                fi
+              fi
+            done < <(git diff-tree --no-commit-id --name-only -r "$commit" -- "_posts/*.md")
+
+            if [ "$has_due_post" = "true" ] && [ "$has_future_post" = "true" ]; then
+              echo "::error::Commit ${commit} mixes due and future post dates; split it before publishing."
+              git diff-tree --no-commit-id --name-only -r "$commit"
+              exit 1
+            fi
+
+            if [ "$has_due_post" = "true" ]; then
+              commits+=("$commit")
+            fi
+          done
+
           if [ "${#commits[@]}" -eq 0 ]; then
-            echo "No scheduled post commits found for ${publish_date}."
+            echo "No due scheduled post commits found through ${publish_date}."
             exit 0
           fi
 
-          echo "Found ${#commits[@]} scheduled commit(s) for ${publish_date}:"
+          echo "Found ${#commits[@]} due scheduled commit(s) through ${publish_date}:"
           for commit in "${commits[@]}"; do
             git log -1 --oneline "$commit"
           done
@@ -103,4 +135,32 @@ jobs:
           fi
 
           git push origin HEAD:main
-          gh workflow run jekyll.yml --ref main
+          echo "published=true" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Ruby
+        if: steps.publish.outputs.published == 'true'
+        uses: ruby/setup-ruby@8575951200e472d5f2d95c625da0c7bec8217c42 # v1.161.0
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+          cache-version: 0
+
+      - name: Setup Pages
+        if: steps.publish.outputs.published == 'true'
+        id: pages
+        uses: actions/configure-pages@v4
+
+      - name: Build with Jekyll
+        if: steps.publish.outputs.published == 'true'
+        run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
+        env:
+          JEKYLL_ENV: production
+
+      - name: Upload artifact
+        if: steps.publish.outputs.published == 'true'
+        uses: actions/upload-pages-artifact@v3
+
+      - name: Deploy to GitHub Pages
+        if: steps.publish.outputs.published == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
