@@ -1,0 +1,103 @@
+name: Publish scheduled posts
+
+on:
+  schedule:
+    # 00:05 KST every day.
+    - cron: "5 15 * * *"
+  workflow_dispatch:
+    inputs:
+      publish_date:
+        description: "KST publish date to release (YYYY-MM-DD). Defaults to today in Asia/Seoul."
+        required: false
+        type: string
+      dry_run:
+        description: "List matching commits without pushing."
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: scheduled-post-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Cherry-pick today's post commits from dev
+        env:
+          PUBLISH_DATE: ${{ github.event.inputs.publish_date }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          publish_date="${PUBLISH_DATE:-}"
+          if [ -z "$publish_date" ]; then
+            publish_date="$(TZ=Asia/Seoul date +%F)"
+          fi
+
+          if [[ ! "$publish_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "::error::publish_date must be YYYY-MM-DD, got '${publish_date}'"
+            exit 1
+          fi
+
+          dry_run="${DRY_RUN:-false}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --no-tags origin main:refs/remotes/origin/main dev:refs/remotes/origin/dev
+          git checkout -B main origin/main
+
+          mapfile -t commits < <(
+            git log --reverse --format="%H" origin/main..origin/dev -- "_posts/${publish_date}-*.md"
+          )
+
+          if [ "${#commits[@]}" -eq 0 ]; then
+            echo "No scheduled post commits found for ${publish_date}."
+            exit 0
+          fi
+
+          echo "Found ${#commits[@]} scheduled commit(s) for ${publish_date}:"
+          for commit in "${commits[@]}"; do
+            git log -1 --oneline "$commit"
+          done
+
+          if [ "$dry_run" = "true" ]; then
+            echo "Dry run enabled; not cherry-picking or pushing."
+            exit 0
+          fi
+
+          picked_any=false
+          for commit in "${commits[@]}"; do
+            echo "Cherry-picking ${commit}"
+            if git cherry-pick "$commit"; then
+              picked_any=true
+              continue
+            fi
+
+            if git diff --quiet && git diff --cached --quiet; then
+              echo "Commit ${commit} is already applied; skipping empty cherry-pick."
+              git cherry-pick --skip
+              continue
+            fi
+
+            echo "::error::Cherry-pick failed for ${commit}."
+            git status --short
+            exit 1
+          done
+
+          if [ "$picked_any" = "false" ]; then
+            echo "No new commits were created."
+            exit 0
+          fi
+
+          git push origin HEAD:main
