@@ -134,7 +134,6 @@ jobs:
             exit 0
           fi
 
-          git push origin HEAD:main
           echo "published=true" >> "$GITHUB_OUTPUT"
 
       - name: Setup Ruby
@@ -159,6 +158,10 @@ jobs:
       - name: Upload artifact
         if: steps.publish.outputs.published == 'true'
         uses: actions/upload-pages-artifact@v3
+
+      - name: Push published commits
+        if: steps.publish.outputs.published == 'true'
+        run: git push origin HEAD:main
 
       - name: Deploy to GitHub Pages
         if: steps.publish.outputs.published == 'true'
