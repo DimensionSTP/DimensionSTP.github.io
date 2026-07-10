@@ -29,9 +29,9 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-22.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      published: ${{ steps.publish.outputs.published }}
+      should_deploy: ${{ steps.publish.outputs.should_deploy }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -219,7 +219,14 @@ jobs:
         if: steps.publish.outputs.published == 'true'
         run: git push origin HEAD:main
 
+  deploy:
+    needs: publish
+    if: needs.publish.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
-        if: steps.publish.outputs.should_deploy == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
