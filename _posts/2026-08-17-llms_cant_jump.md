@@ -76,7 +76,7 @@ $$
 하지만 논문이 말하는 abductive jump는 단순 empirical fit을 넘는다.
 
 $$
-E \xRightarrow{J} A_{\mathrm{new}}
+E \overset{J}{\Longrightarrow} A_{\mathrm{new}}
 $$
 
 여기서 $J$는 observation에 이미 명시된 pattern을 그대로 요약하는 것이 아니라, observation을 설명할 새로운 conceptual structure를 제안하는 과정이다.
